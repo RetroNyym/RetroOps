@@ -65,7 +65,7 @@ def test_ana_sayfa(sunucu):
     metin = sonuc if isinstance(sonuc, str) else sonuc.decode()
     assert "RetroOps" in metin
     assert "E-Ticaret Operasyon" in metin
-    assert "sekme-trend" in metin
+    assert "sekme-entegrasyon" in metin
 
 
 def test_logo(sunucu):
@@ -80,7 +80,7 @@ def test_meta(sunucu):
     assert sonuc["surum"]
     assert len(sonuc["iade_durumlari"]) == 6
     assert "Trendyol" in sonuc["pazaryerleri"]
-    assert len(sonuc["trend_kategorileri"]) == 8
+    assert sonuc["siparis_durumlari"]
 
 
 def test_bos_ozet(sunucu):
@@ -96,19 +96,6 @@ def test_komisyonlar(sunucu):
     sonuc, _ = govde(sunucu, "/api/komisyonlar")
     assert sonuc["tablo"]["Trendyol"]["Giyim"]["alt"] == 18
     assert sonuc["tablo"]["Trendyol"]["Giyim"]["ust"] == 23
-
-
-def test_kategoriler(sunucu):
-    sonuc, _ = govde(sunucu, "/api/kategoriler")
-    assert len(sonuc["liste"]) == 8
-    assert sonuc["liste"][0]["id"] in ("e-ticaret", "iade")
-    assert sonuc["liste"][0]["anahtar"]
-
-
-def test_trend_yerlesik(sunucu):
-    sonuc, _ = govde(sunucu, "/api/trend?kategori=iade&canli=0")
-    assert sonuc["kaynak"] == "yerlesik"
-    assert len(sonuc["seri"]) == 60
 
 
 def test_hesapla(sunucu):

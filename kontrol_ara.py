@@ -21,7 +21,7 @@ print("Menü/Bölüm farkı:", sorted(menu ^ bolumler) or "YOK — birebir")
 
 # sekmeAc'taki yükleyici çağrıları
 yukleyiciler = set(re.findall(r"if\(ad==='([a-z]+)'\)", js))
-print("Sekme yükleyicisi olmayan menü:", sorted(menu - yukleyiciler - {"trend"}) or "YOK")
+print("Sekme yükleyicisi olmayan menü:", sorted(menu - yukleyiciler) or "YOK")
 
 if eksik or (menu ^ bolumler):
     raise SystemExit(1)

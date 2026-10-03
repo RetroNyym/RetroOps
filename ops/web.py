@@ -9,7 +9,7 @@ from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from . import __surum__, csv_io, entegrasyon, iade, kargo, kar, sikayet, trend
+from . import __surum__, csv_io, entegrasyon, iade, kargo, kar, sikayet
 from .db import connect
 from .sayfa import LOGO_SVG, PAGE
 
@@ -177,16 +177,6 @@ class Handler(BaseHTTPRequestHandler):
                         for p, kategoriler in kar.KOMISYON_TABLOSU.items()
                     }
                 })
-            elif yol == "/api/kategoriler":
-                self._json(200, {"liste": trend.kategori_listesi()})
-            elif yol == "/api/trend":
-                veri = trend.veri_cek(
-                    al("anahtar") or "e-ticaret",
-                    kategori=al("kategori", "e-ticaret"),
-                    canli_dene=al("canli", "1") != "0",
-                    zaman_asimi=int(al("zaman", "8")),
-                )
-                self._json(200, veri)
             elif yol == "/api/entegrasyonlar":
                 conn = connect()
                 try:
@@ -509,7 +499,6 @@ class Handler(BaseHTTPRequestHandler):
             "pazaryerleri": list(kar.KOMISYON_TABLOSU.keys()),
             "siparis_durumlari": list(csv_io.SIPARIS_DURUMLARI),
             "csv_tablolari": list(csv_io.TABLOLAR),
-            "trend_kategorileri": trend.kategori_listesi(),
         }
 
 

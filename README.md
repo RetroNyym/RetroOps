@@ -5,7 +5,8 @@ e-ticaret 2025'te 365.395 şikâyetle en çok şikâyet edilen sektör (%63 ipta
 %56 fiyat-fatura-ödeme, %34 teslim edilmeyen ürün), kargo gecikmesi ve artan pazaryeri
 komisyonları (giyimde %18–23) en sık zorlanan başlıklar. Bu panel tam bu dört noktayı
 tek yerde çözer: **iade takibi, kargo problem panosu, kâr/kırılma noktası hesabı ve
-şikâyet izleyici** — üstelik trend sekmesiyle Google Trends verisini canlı çeker.
+şikâyet izleyici** — üstelik pazaryeri entegrasyonlarıyla sipariş/kargo/iade verisi
+otomatik gelir.
 
 > Arayüz: koyu tema, RetroOps (R+) markalı tek sayfa uygulama · Sunucu: saf stdlib
 > · Veri: yerel SQLite · Harici bağımlılık: **yok**
@@ -31,7 +32,6 @@ python -m ops.web 8780       # veya: baslat.bat
 | **Kâr Hesabı** | Komisyon + kargo + paket + KDV + diğer kesintilerle net kâr; **minimum (kırılma) fiyatı** ve hedef kârlı fiyat; 2026 komisyon tablosu | Komisyon oranlarının yükselmesi, fiyat hassasiyeti |
 | **Şikâyetler** | Türkiye pazarının başlıklarıyla kayıt, çözüm oranı ve ort. çözüm süresi | Müşteri şikâyet takibi |
 | **Entegrasyonlar** | 9 pazaryeri/servis API hesabını **bağla** (Trendyol, Hepsiburada, N11, ÇiçekSepeti, Shopier, Pazarama, Shopify, WooCommerce, Amazon); şifreli sakla, **Test** ile bağlantıyı dene, **Senkronize et** ile sipariş/kargo/iade kayıtlarını otomatik çek | Manuel sipariş girişi ve takip no kopyalama |
-| **Trendler** | Google Trends son 5 yıl — canlı API denenir, **429/ağ hatasında yerleşik 5 yıllık araştırma verisine düşer** (grafik hiç boş kalmaz) | Talep eğilimini görmek |
 | **CSV** | Tablo listesini Excel uyumlu indir, şablon al, siparişleri toplu yükle | Elle tek tek giriş yok |
 
 ## Mimari
@@ -44,7 +44,6 @@ eticaret-ops/
     iade.py        14 gün sayacı + durum makinesi (geçişler katı)
     kargo.py       Gecikme eşiği, problem listesi, sorun tipleri
     sikayet.py     Kategori/çözüm istatistikleri
-    trend.py       Canlı Google Trends (urllib) → hata anında yerleşik 60 aylık seri
     csv_io.py      Şablon, toplu yükleme, dışa aktarma (UTF-8 BOM, Excel uyumlu)
     ornek_veri.py  Demo veri (idempotent: doluysa dokunmaz)
     entegrasyon.py Platform listesi, bağlantı CRUD, şifreli saklama, test/senkron
@@ -55,7 +54,7 @@ eticaret-ops/
     sayfa.py       Panel HTML/CSS/JS + RetroOps SVG logo
     web.py         http.server JSON API
   data/ops.db      Veritabanı (ilk çalıştırmada oluşur)
-  test_*.py        80 test
+  test_*.py        62 test
   baslat.bat, README.md, requirements.txt
 ```
 
@@ -72,7 +71,7 @@ eticaret-ops/
 | POST | `/api/gonderiler/{id}/durum` | `{durum, sorun_tipi}` |
 | GET/POST | `/api/sikayetler` · POST `/api/sikayetler/{id}/durum` | Kayıt / çözüm |
 | POST | `/api/hesapla` | Kâr dökümü + minimum + hedefli fiyat |
-| GET | `/api/komisyonlar` · `/api/kategoriler` · `/api/trend` | Komisyon, trend kategorileri, Trends serisi |
+| GET | `/api/komisyonlar` | Komisyon tablosu (kâr hesabı) |
 | GET/POST | `/api/entegrasyonlar` | 9 platform + kayıtlı bağlantılar / yeni bağlantı (sır asla dönmez) |
 | POST | `/api/entegrasyonlar/test` | Taslak test: `{platform, ayarlar, kimlik}` |
 | POST | `/api/entegrasyonlar/{id}/test` · `/{id}/senkron` · `/{id}/sil` | Test / `{gun:1..90}` senkron / sil |
@@ -83,7 +82,7 @@ eticaret-ops/
 
 ```powershell
 cd eticaret-ops
-python -m pytest -q          # 80 test, ~11 sn
+python -m pytest -q          # 62 test
 python -m pyflakes ops       # 0 hata
 python kontrol_ara.py        # JS <-> HTML id bütünlüğü
 python kontrol_api.py        # JS yolları <-> sunucu rotaları
@@ -91,9 +90,6 @@ python kontrol_api.py        # JS yolları <-> sunucu rotaları
 
 ## Notlar
 
-- **Trend kaynağı:** Canlı Google Trends isteği önce denenir; API 429/engel/ölüm
-  durumunda yanıt `kaynak: "yerlesik"` + `canli_hata` alanıyla bilgi verir ve grafik
-  yerleşik 60 aylık (2021→2026) araştırma serisiyle çizilir. Hiçbir seçenek boş kalmaz.
 - **Kâr formülü:** Komisyon ve diğer kesintiler KDV *dahil* satış üzerinden;
   kâr = KDV hariç satış − alış − komisyon − kargo − paket − diğer. Minimum fiyat bu
   denklemin kâr=0 çözümüdür (komisyon paydası silerse anlaşılır hata döner).

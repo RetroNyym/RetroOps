@@ -85,7 +85,6 @@ tr:hover td{background:#16203a33}
 #bildirim.ok{background:#14532d;color:#bbf7d0;border:1px solid #22c55e}
 #bildirim.hata{background:#7f1d1d;color:#fecaca;border:1px solid #ef4444}
 .gizle{display:none}
-.grafik svg{width:100%;height:auto;display:block}
 .not{color:var(--mut);font-size:13px;margin-top:8px}
 @media (max-width:760px){.cubuk{grid-template-columns:1fr;gap:4px}.cubuk b{text-align:left}}
 </style>
@@ -102,7 +101,6 @@ tr:hover td{background:#16203a33}
     <button data-sekme="kargo">Kargo</button>
     <button data-sekme="kar">Kâr Hesabı</button>
     <button data-sekme="sikayet">Şikâyetler</button>
-    <button data-sekme="trend">Trendler</button>
     <button data-sekme="entegrasyon">Entegrasyonlar</button>
     <button data-sekme="csv">CSV</button>
   </nav>
@@ -215,27 +213,6 @@ tr:hover td{background:#16203a33}
   </div>
 </section>
 
-<section id="sekme-trend" class="sekme">
-  <div class="baslik-satir">
-    <div><h2>Google Trends — son 5 yıl</h2><p>Canlı API denenir; ulaşılamazsa yerleşik 5 yıllık araştırma verisine düşer (grafik hiç boş kalmaz).</p></div>
-  </div>
-  <form class="ust" id="form-trend">
-    <label>Kategori<select id="t-kategori"></select></label>
-    <label>Anahtar kelime<input id="t-anahtar" placeholder="e-ticaret"></label>
-    <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="t-canli" checked style="min-width:auto"> Canlı Google Trends dene</label>
-    <button type="submit">Çek</button>
-  </form>
-  <div id="t-durum"></div>
-  <div class="panel">
-    <div class="baslik-satir" style="margin-bottom:6px">
-      <div><b id="t-baslik">—</b><div class="not" id="t-ipucu"></div></div>
-      <span class="rozet r-mavi" id="t-kaynak">—</span>
-    </div>
-    <div class="grafik" id="t-grafik"><p class="bos">Veri bekleniyor…</p></div>
-    <div class="not" id="t-not"></div>
-  </div>
-</section>
-
 <section id="sekme-entegrasyon" class="sekme">
   <div class="baslik-satir">
     <div><h2>Pazaryeri entegrasyonları</h2><p>Hesabınızı bağlayın; sipariş, kargo ve iade verileri otomatik gelsin — elle giriş yok.</p></div>
@@ -325,7 +302,6 @@ function sekmeAc(ad){
   if(ad==='sikayet')sikayetYukle();
   if(ad==='csv')csvHazir();
   if(ad==='entegrasyon')entegrasyonYukle();
-  if(ad==='trend'&&!$('#t-grafik').dataset.doldur) trendYukle();
 }
 
 // ---- panel ----
@@ -587,69 +563,6 @@ $('#form-sikayet').addEventListener('submit',async e=>{
   }catch(err){bildir(err.message,'hata');}
 });
 
-// ---- trend ----
-function grafik(seri){
-  if(!seri||!seri.length)return '<p class="bos">Seri boş</p>';
-  const w=980,h=310,l=46,r=16,t=16,b=36;
-  const d=seri.map(p=>Number(p.deger)||0);
-  let mx=Math.max.apply(null,d),mn=Math.min.apply(null,d);
-  if(mx===mn){mx=mn+1;}
-  const N=seri.length;
-  const X=i=>l+(N<2?0:i*(w-l-r)/(N-1));
-  const Y=v=>t+(mx-v)/(mx-mn)*(h-t-b);
-  const nokta=d.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
-  const alan=l+','+(h-b)+' '+nokta+' '+X(N-1).toFixed(1)+','+(h-b);
-  let cizgi='';
-  for(let k=0;k<=4;k++){
-    const v=mn+(mx-mn)*k/4,y=Y(v);
-    cizgi+='<line x1="'+l+'" y1="'+y.toFixed(1)+'" x2="'+(w-r)+'" y2="'+y.toFixed(1)+'" stroke="#223050"/>'+
-      '<text x="'+(l-8)+'" y="'+(y+4).toFixed(1)+'" fill="#8fa3c0" font-size="11" text-anchor="end">'+Math.round(v)+'</text>';
-  }
-  const adim=Math.max(1,Math.round(N/6));
-  let etiket='';
-  for(let i=0;i<N;i+=adim){
-    etiket+='<text x="'+X(i).toFixed(1)+'" y="'+(h-12)+'" fill="#8fa3c0" font-size="11" text-anchor="middle">'+esc(seri[i].tarih)+'</text>';
-  }
-  let noktalar='';
-  for(let i=0;i<N;i+=Math.max(1,Math.round(N/40))){
-    noktalar+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(d[i]).toFixed(1)+'" r="2.2" fill="#12a293"/>';
-  }
-  return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Trend grafiği">'+
-    '<defs><linearGradient id="dolgu" x1="0" y1="0" x2="0" y2="1">'+
-    '<stop offset="0" stop-color="#3b82f6" stop-opacity=".45"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/></linearGradient></defs>'+
-    cizgi+'<polygon points="'+alan+'" fill="url(#dolgu)"/>'+
-    '<polyline points="'+nokta+'" fill="none" stroke="#60a5fa" stroke-width="2.4" stroke-linejoin="round"/>'+
-    noktalar+etiket+'</svg>';
-}
-async function trendYukle(){
-  const kutu=$('#t-grafik');
-  kutu.innerHTML='<p class="bos">Çekiliyor…</p>';
-  try{
-    const kategori=$('#t-kategori').value;
-    const anahtar=$('#t-anahtar').value.trim()||kategori;
-    const canli=$('#t-canli').checked?'1':'0';
-    const d=await api('/api/trend?kategori='+encodeURIComponent(kategori)+'&anahtar='+encodeURIComponent(anahtar)+'&canli='+canli);
-    kutu.dataset.doldur='1';
-    kutu.innerHTML=grafik(d.seri);
-    $('#t-baslik').textContent=(d.ad||d.kategori)+' · son 5 yıl ('+d.seri.length+' nokta)';
-    $('#t-ipucu').textContent=d.ipucu||'';
-    const rozet=$('#t-kaynak');
-    if(d.kaynak==='canli'){rozet.textContent='CANLI GOOGLE TRENDS';rozet.className='rozet r-yesil';}
-    else{rozet.textContent='YERLEŞİK VERİ';rozet.className='rozet r-sari';}
-    $('#t-not').textContent=d.canli_hata?('Canlı veri alınamadı ('+d.canli_hata+') — '+d.kaynak_not):(d.kaynak_not||'');
-    $('#t-durum').innerHTML=d.canli_hata?'<div class="uyari-cubugu">Google Trends canlı servisi yanıt vermedi; grafik yerleşik 5 yıllık araştırma verisiyle çizildi. Canlı denemeyi kapatıp tekrar deneyebilirsiniz.</div>':'';
-  }catch(e){
-    kutu.innerHTML='<p class="bos">Grafik yüklenemedi</p>';
-    bildir(e.message,'hata');
-  }
-}
-$('#form-trend').addEventListener('submit',e=>{e.preventDefault();trendYukle();});
-$('#t-kategori').addEventListener('change',()=>{
-  const k=META.trend_kategorileri.find(x=>x.id===$('#t-kategori').value);
-  if(k)$('#t-anahtar').value=k.anahtar;
-  trendYukle();
-});
-
 // ---- entegrasyonlar ----
 let PLATFORMLAR=[];
 function eSecilenPlatform(){return PLATFORMLAR.find(p=>p.id===$('#e-platform').value)||PLATFORMLAR[0];}
@@ -810,14 +723,10 @@ async function baslat(){
     $('#f-s-kaynak').innerHTML=secenekler(META.sikayet_kaynaklari);
     $('#f-s-kategori').innerHTML=secenekler(META.sikayet_kategorileri);
     $('#f-s-tarih').value=bugun();
-    $('#t-kategori').innerHTML=secenekler(META.trend_kategorileri.map(x=>({id:x.id,ad:x.ad})));
-    const ilk=META.trend_kategorileri[0];
-    $('#t-kategori').value=ilk.id;$('#t-anahtar').value=ilk.anahtar;
     $('#v-tablo').innerHTML=secenekler(META.csv_tablolari);
     $('#v-etiket').classList.remove('gizle');
     await siparisleriYukle();
     ozetYukle();
-    trendYukle();
   }catch(e){bildir('Başlatma hatası: '+e.message,'hata');}
 }
 document.addEventListener('DOMContentLoaded',baslat);
