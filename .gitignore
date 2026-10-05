@@ -4,6 +4,12 @@ data/
 *.sqlite
 *.sqlite3
 .anahtar
+.lisans
+
+# Derleme çıktıları
+build/
+dist/
+*.zip
 
 # Python
 __pycache__/

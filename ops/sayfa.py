@@ -86,6 +86,13 @@ tr:hover td{background:#16203a33}
 #bildirim.hata{background:#7f1d1d;color:#fecaca;border:1px solid #ef4444}
 .gizle{display:none}
 .not{color:var(--mut);font-size:13px;margin-top:8px}
+.rakam{display:block;color:var(--mut);font-size:11px;line-height:1.4}
+tr.satir-toplam td{border-top:2px solid var(--line);font-weight:700;padding-top:9px}
+tr.satir-toplam .rakam{font-weight:400}
+#lisans-kapak{position:fixed;inset:0;background:#0b1220f2;z-index:99;display:flex;align-items:center;justify-content:center;padding:20px}
+#lisans-kapak.gizle{display:none}
+.altbilgi{display:flex;gap:16px;flex-wrap:wrap;align-items:center;color:var(--mut);font-size:12px;margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.altbilgi a{color:var(--acc);text-decoration:none}
 @media (max-width:760px){.cubuk{grid-template-columns:1fr;gap:4px}.cubuk b{text-align:left}}
 </style>
 </head>
@@ -130,6 +137,39 @@ tr:hover td{background:#16203a33}
   <div class="izgara2">
     <div class="panel"><h3>Süresi aşan iadeler</h3><div id="ozet-geciken"><p class="bos">Kayıt yok</p></div></div>
     <div class="panel"><h3>Problemli gönderiler</h3><div id="ozet-problem"><p class="bos">Kayıt yok</p></div></div>
+  </div>
+  <div class="panel">
+    <div class="baslik-satir"><div><h3>Satışlar</h3>
+      <p>KDV oranı her siparişten otomatik alınır; KDV tutarı ve KDV sonrası net kâr otomatik hesaplanır.</p></div></div>
+    <table><thead><tr>
+      <th>#</th><th>Ürün</th><th>Müşteri</th><th>Pazaryeri</th>
+      <th>Satış (KDV dahil)</th><th>KDV</th><th>KDV sonrası net kâr</th>
+    </tr></thead>
+    <tbody id="ozet-satis"><tr><td colspan="7" class="bos">Kayıt yok</td></tr></tbody>
+    <tfoot id="ozet-satis-toplam"></tfoot></table>
+    <p class="not">Toplamlar <b>tüm</b> siparişlerden hesaplanır; tabloda en fazla
+    son 200 satış listelenir.</p>
+  </div>
+  <div class="izgara2">
+    <div class="panel"><h3>Lisans</h3>
+      <div id="lisans-durum" class="not" style="margin-top:0">Kontrol ediliyor…</div>
+      <div class="ust" style="border:0;padding:0;background:none;margin-top:10px">
+        <label style="flex:1">Lisans anahtarı<input id="l-anahtar" placeholder="RETROOPS-XXXXX-XXXXX-…"></label>
+        <button type="button" id="l-etkinlestir">Etkinleştir</button>
+      </div>
+      <p class="not">Program 14 gün ücretsiz denenebilir. Satın aldığınızda size
+      verilen anahtarı girin — anahtar yalnız bu bilgisayarda geçerlidir.</p>
+    </div>
+    <div class="panel"><h3>Veri &amp; Yedek</h3>
+      <div class="ust" style="border:0;padding:0;background:none">
+        <a class="dugme ikincil" href="/api/yedek/indir">Yedek indir (.db)</a>
+        <label>Yedek yükle<input type="file" id="y-dosya" accept=".db"></label>
+        <button type="button" id="y-geri">Önceki veriye dön</button>
+      </div>
+      <p class="not">Tüm veriler yalnız bu bilgisayardaki <code>data/ops.db</code>
+      dosyasında tutulur; hiçbir veri internete gönderilmez. Yüklenen yedek önce
+      doğrulanır, gerekirse "Önceki veriye dön" ile eski haline alınır.</p>
+    </div>
   </div>
 </section>
 
@@ -264,6 +304,26 @@ tr:hover td{background:#16203a33}
 </section>
 </main>
 
+<footer class="altbilgi">
+  <span>RetroOps <b id="f-surum">—</b></span>
+  <a href="/kilavuz" target="_blank" rel="noopener">Kullanım kılavuzu</a>
+  <span>Gizlilik: veriler yalnız bu bilgisayarda saklanır, dışarı gönderilmez.</span>
+  <span>Destek: RetroOps satış kanalı üzerinden.</span>
+</footer>
+
+<div id="lisans-kapak" class="gizle">
+  <div class="panel" style="max-width:540px">
+    <h3>Lisans süresi doldu</h3>
+    <p class="not" id="k-mesaj">14 günlük deneme süresi doldu.</p>
+    <div class="ust" style="border:0;padding:0;background:none">
+      <label style="flex:1">Lisans anahtarı<input id="k-anahtar" placeholder="RETROOPS-XXXXX-XXXXX-…"></label>
+      <button type="button" id="k-etkinlestir">Etkinleştir</button>
+    </div>
+    <p class="not">Anahtarınızı programı satın aldığınızda aldığınız bilgilerde
+    bulabilirsiniz. Sorun yaşarsanız satış kanalı üzerinden destek alabilirsiniz.</p>
+  </div>
+</div>
+
 <div id="bildirim"></div>
 
 <script>
@@ -307,10 +367,11 @@ function sekmeAc(ad){
 // ---- panel ----
 async function ozetYukle(){
   try{
-    const [d,gec,karListe]=await Promise.all([
+    const [d,gec,karListe,sip]=await Promise.all([
       api('/api/ozet'),
       api('/api/iadeler?sadece=geciken'),
-      api('/api/gonderiler?sadece=problem')
+      api('/api/gonderiler?sadece=problem'),
+      api('/api/siparisler?limit=200')
     ]);
     $('#ozet-tarih').textContent='Veri günü: '+d.gun+' · sürüm '+d.surum;
     $('#k-siparis').textContent=d.siparis.toplam;
@@ -339,9 +400,68 @@ async function ozetYukle(){
 
     $('#ozet-problem').innerHTML=karListe.liste.length?karListe.liste.map(s=>
       '<div class="cubuk"><span class="ad">'+esc(s.kargo_firmasi)+' · '+esc(s.takip_no||'#'+s.id)+'</span><div class="yol"><i style="width:'+Math.min(100,60+s.gecikme_gun*8)+'%;background:#f59e0b"></i></div><b class="uy">'+esc(s.sorun_etiket)+'</b></div>').join(''):'<p class="bos">Problemli gönderi yok</p>';
+
+    satisCiz(sip.liste||[],d.siparis);
   }catch(e){bildir('Panel yüklenemedi: '+e.message,'hata');}
 }
+function satisCiz(liste,ozet){
+  $('#ozet-satis').innerHTML=liste.length?liste.map(s=>{
+    const karS=s.kar;
+    const karMetin=karS==null?'—':para(karS)+' ₺';
+    const karSinif=karS==null?'':(karS<0?'kt':'iy');
+    return '<tr><td>'+s.id+'</td><td>'+esc(s.urun||'—')+'</td><td>'+esc(s.musteri||'—')+'</td>'+
+      '<td>'+esc(s.pazaryeri||'—')+'</td>'+
+      '<td>'+para(s.satis_fiyati)+' ₺</td>'+
+      '<td><span class="rakam">%'+esc(s.kdv_orani==null?'20':s.kdv_orani)+'</span><span class="rakam">'+para(s.kdv_tutar)+' ₺</span></td>'+
+      '<td><b class="'+karSinif+'">'+karMetin+'</b>'+
+      (s.marj_yuzde==null?'':'<span class="rakam">marj %'+s.marj_yuzde+'</span>')+'</td></tr>';
+  }).join(''):'<tr><td colspan="7" class="bos">Kayıt yok</td></tr>';
+  const karT=ozet.kar;
+  $('#ozet-satis-toplam').innerHTML=liste.length?
+    '<tr class="satir-toplam"><td colspan="4"><b>Toplam ('+ozet.toplam+' satış)</b></td>'+
+    '<td>'+para(ozet.ciro)+' ₺<span class="rakam">KDV hariç '+para(ozet.kdv_haric_ciro)+' ₺</span></td>'+
+    '<td><span class="rakam">KDV toplamı</span><span class="rakam">'+para(ozet.kdv_tutar)+' ₺</span></td>'+
+    '<td><b class="'+(karT<0?'kt':'iy')+'">'+para(karT)+' ₺</b><span class="rakam">Toplam KDV sonrası net kâr</span></td></tr>':'';
+}
 $('#ozet-yenile').addEventListener('click',ozetYukle);
+
+// ---- lisans & yedek ----
+function lisansGoster(d){
+  if(!d)return;
+  const etiket=d.durum==='lisansli'?'Lisanslı':(d.durum==='deneme'?'Deneme: '+d.kalan_gun+' gün':'Süresi doldu');
+  const cls=d.durum==='lisansli'?'r-yesil':(d.durum==='deneme'?'r-sari':'r-kirmizi');
+  const el=$('#lisans-durum');
+  if(el)el.innerHTML='<span class="rozet '+cls+'">'+esc(etiket)+'</span> <span class="not" style="margin:0">'+esc(d.mesaj||'')+'</span><br><span class="not" style="margin:0">Makine kimliği: <code>'+esc(d.makine||'')+'</code></span>';
+  const mesaj=$('#k-mesaj');if(mesaj)mesaj.textContent=d.mesaj||'';
+  const kapak=$('#lisans-kapak');
+  if(kapak)kapak.classList.toggle('gizle',d.durum!=='suresi_doldu');
+}
+async function lisansEtkinlestir(girdiId){
+  const anahtar=$('#'+girdiId).value.trim();
+  if(!anahtar){bildir('Önce lisans anahtarını girin','hata');return;}
+  try{
+    const d=await post('/api/lisans',{anahtar});
+    lisansGoster(d);
+    bildir(d.mesaj||'Lisans etkinleştirildi');
+    if(d.durum==='lisansli')setTimeout(()=>location.reload(),700);
+  }catch(e){bildir(e.message,'hata');}
+}
+$('#l-etkinlestir').addEventListener('click',()=>lisansEtkinlestir('l-anahtar'));
+$('#k-etkinlestir').addEventListener('click',()=>lisansEtkinlestir('k-anahtar'));
+$('#y-geri').addEventListener('click',async()=>{
+  if(!window.confirm('Son yedek yüklemeden önceki veritabanına dönülsün mü?'))return;
+  try{const d=await post('/api/yedek/geri_al');bildir(d.mesaj);setTimeout(()=>location.reload(),700);}
+  catch(e){bildir(e.message,'hata');}
+});
+$('#y-dosya').addEventListener('change',async()=>{
+  const f=$('#y-dosya').files[0];if(!f)return;
+  try{
+    const buf=await f.arrayBuffer();
+    const d=await api('/api/yedek/yukle',{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:buf});
+    bildir(d.mesaj||'Yedek yüklendi');
+    setTimeout(()=>location.reload(),900);
+  }catch(e){bildir(e.message,'hata');$('#y-dosya').value='';}
+});
 
 // ---- iadeler ----
 async function siparisleriYukle(){
@@ -715,6 +835,9 @@ $('#v-yukle').addEventListener('click',async()=>{
 async function baslat(){
   try{
     META=await api('/api/meta');
+    lisansGoster(META.lisans);
+    const surum=$('#f-surum');if(surum)surum.textContent=META.surum;
+    if(META.lisans&&META.lisans.durum==='suresi_doldu')return;
     IADE_ETIKET=Object.fromEntries(META.iade_durumlari.map(x=>[x.id,x.ad]));
     $('#f-i-sebep').innerHTML=secenekler(META.sebepler);
     $('#f-i-tarih').value=bugun();

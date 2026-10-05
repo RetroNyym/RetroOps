@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+import html
 import json
 import re
 import sys
+import threading
+import webbrowser
 from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import __surum__, csv_io, entegrasyon, iade, kargo, kar, sikayet
-from .db import connect
+from . import __surum__, csv_io, entegrasyon, iade, kargo, kar, lisans, sikayet
+from .db import kok_dizin, connect, yedek_geri_al, yedek_indir, yedek_yaz
 from .sayfa import LOGO_SVG, PAGE
+
+# Lisans süresi dolmuş olsa bile açık kalması gereken uçlar
+IZINLI_YOLLAR = {"/", "/index.html", "/logo.svg", "/favicon.ico", "/kilavuz",
+                 "/api/meta", "/api/lisans"}
 
 
 def _tarih_dogrula(metin: str) -> str:
@@ -23,6 +31,11 @@ def _tarih_dogrula(metin: str) -> str:
 
 def siparis_satiri(conn, satir) -> dict:
     veri = dict(satir)
+    oran = _sayi_oran(veri.get("kdv_orani"))
+    satis = _sayi_oran(veri.get("satis_fiyati"))
+    veri["kdv_orani"] = oran
+    veri["satis_kdv_haric"] = round(satis / (1 + oran / 100), 2)
+    veri["kdv_tutar"] = round(satis - satis / (1 + oran / 100), 2)
     try:
         h = kar.hesap(
             alis=veri["alis_fiyati"],
@@ -41,6 +54,15 @@ def siparis_satiri(conn, satir) -> dict:
     return veri
 
 
+def _sayi_oran(deger, varsayilan: float = 0.0) -> float:
+    try:
+        if deger is None or deger == "":
+            return varsayilan
+        return float(str(deger).replace(",", "."))
+    except (TypeError, ValueError):
+        return varsayilan
+
+
 def siparis_ozet(conn) -> dict:
     satirlar = conn.execute("SELECT * FROM siparisler").fetchall()
     ciro = kdv_haric = kar_toplam = 0.0
@@ -48,13 +70,15 @@ def siparis_ozet(conn) -> dict:
     for s in satirlar:
         dagilim[s["durum"]] = dagilim.get(s["durum"], 0) + 1
         ciro += s["satis_fiyati"]
-        kdv_haric += s["satis_fiyati"] / (1 + s["kdv_orani"] / 100)
+        oran = _sayi_oran(s["kdv_orani"], 20.0)
+        kdv_haric += s["satis_fiyati"] / (1 + oran / 100)
         veri = siparis_satiri(conn, s)
         kar_toplam += veri["kar"] or 0.0
     return {
         "toplam": len(satirlar),
         "ciro": round(ciro, 2),
         "kdv_haric_ciro": round(kdv_haric, 2),
+        "kdv_tutar": round(ciro - kdv_haric, 2),
         "kar": round(kar_toplam, 2),
         "marj_yuzde": round(kar_toplam / kdv_haric * 100, 1) if kdv_haric else 0.0,
         "durum_dagilim": dagilim,
@@ -66,6 +90,24 @@ class Handler(BaseHTTPRequestHandler):
 
     def log_message(self, *args):
         pass
+
+    def handle_error(self, request, client_address):
+        """Tarayıcı sekmesini kapattığında logu dolduran gürültüyü bastırır."""
+        hata = sys.exc_info()[1]
+        if isinstance(hata, (ConnectionResetError, BrokenPipeError,
+                             ConnectionAbortedError, TimeoutError)):
+            return
+        super().handle_error(request, client_address)
+
+    def _lisans_kontrol(self, yol: str) -> bool:
+        """Kilitliyse True döndürür ve 402 yanıtı gönderir."""
+        if yol in IZINLI_YOLLAR:
+            return False
+        if lisans.kilitli():
+            self._hata(402, "Lisans süresi doldu. Panel'yi kullanmak için "
+                            "geçerli bir lisans anahtarı girin.")
+            return True
+        return False
 
     # -- gönderim yardımcıları ------------------------------------------------
     def _gonder(self, kod: int, veri, tip: str = "application/json",
@@ -114,10 +156,23 @@ class Handler(BaseHTTPRequestHandler):
             return sorgu.get(ad, [varsayilan])[0]
 
         try:
+            if self._lisans_kontrol(yol):
+                return
             if yol in ("/", "/index.html"):
                 self._gonder(200, PAGE, "text/html")
             elif yol == "/logo.svg":
                 self._gonder(200, LOGO_SVG, "image/svg+xml")
+            elif yol == "/kilavuz":
+                self._gonder(200, KILAVUZ_HTML(), "text/html")
+            elif yol == "/api/lisans":
+                self._json(200, lisans.durum())
+            elif yol == "/api/yedek/indir":
+                ham = yedek_indir()
+                self._gonder(
+                    200, ham, "application/octet-stream",
+                    {"Content-Disposition": 'attachment; filename="retroops-'
+                     f'yedek-{date.today().isoformat()}.db"'},
+                )
             elif yol == "/api/meta":
                 self._json(200, self._meta())
             elif yol == "/api/ozet":
@@ -135,11 +190,15 @@ class Handler(BaseHTTPRequestHandler):
                     conn.close()
                 self._json(200, veri)
             elif yol == "/api/siparisler":
+                sinir = al("limit")
+                sorgu = "SELECT * FROM siparisler ORDER BY siparis_tarihi DESC, id DESC"
+                parametre: tuple = ()
+                if sinir.isdigit() and int(sinir) > 0:
+                    sorgu += " LIMIT ?"
+                    parametre = (int(sinir),)
                 conn = connect()
                 try:
-                    satirlar = conn.execute(
-                        "SELECT * FROM siparisler ORDER BY siparis_tarihi DESC, id DESC"
-                    ).fetchall()
+                    satirlar = conn.execute(sorgu, parametre).fetchall()
                     liste = [siparis_satiri(conn, s) for s in satirlar]
                 finally:
                     conn.close()
@@ -223,7 +282,20 @@ class Handler(BaseHTTPRequestHandler):
             return sorgu.get(ad, [varsayilan])[0]
 
         try:
-            if yol == "/api/siparisler":
+            if self._lisans_kontrol(yol):
+                return
+            if yol == "/api/lisans":
+                veri = self._govde_json()
+                self._json(200, lisans.etkinlestir(str(veri.get("anahtar") or "")))
+            elif yol == "/api/yedek/yukle":
+                n = int(self.headers.get("Content-Length") or 0)
+                if n <= 0:
+                    raise ValueError("Yedek dosyası boş görünüyor.")
+                ham = self.rfile.read(n)
+                self._json(200, yedek_yaz(ham))
+            elif yol == "/api/yedek/geri_al":
+                self._json(200, yedek_geri_al())
+            elif yol == "/api/siparisler":
                 self._json(201, self._siparis_ekle(self._govde_json()))
             elif yol == "/api/iadeler":
                 self._json(201, self._iade_ekle(self._govde_json()))
@@ -473,6 +545,7 @@ class Handler(BaseHTTPRequestHandler):
         return {
             "surum": __surum__,
             "gun": datetime.now().isoformat(timespec="seconds"),
+            "lisans": lisans.durum(),
             "iade_durumlari": [
                 {"id": d, "ad": iade.ETIKETLER[d]} for d in iade.DURUMLAR
             ],
@@ -502,9 +575,58 @@ class Handler(BaseHTTPRequestHandler):
         }
 
 
-def main(port: int = 8780) -> None:
+def KILAVUZ_HTML() -> str:
+    """``KILOGUZ.md`` dosyasını koyu temalı bir HTML sayfasına çevirir."""
+    adaylar = [
+        kok_dizin() / "KILOGUZ.md",
+        Path(__file__).resolve().parent.parent / "KILOGUZ.md",
+    ]
+    metin = ""
+    for aday in adaylar:
+        try:
+            metin = aday.read_text(encoding="utf-8")
+            break
+        except OSError:
+            continue
+    if not metin:
+        metin = ("# Kılavuz bulunamadı\n\nKılavuz dosyası (KILOGUZ.md) programla "
+                 "aynı klasörde olmalı.")
+    parcalar = ["<pre style='white-space:pre-wrap;font-family:inherit'>"]
+    on_blok = False
+    for satir in metin.splitlines():
+        guvenli = html.escape(satir)
+        if satir.startswith("```"):
+            on_blok = not on_blok
+            continue
+        if on_blok:
+            parcalar.append(guvenli)
+        elif satir.startswith("# "):
+            parcalar.append(f"<h1 style='margin-top:0'>{guvenli[2:]}</h1>")
+        elif satir.startswith("## "):
+            parcalar.append(f"<h2>{guvenli[3:]}</h2>")
+        elif satir.startswith("- ") or satir.startswith("* "):
+            parcalar.append(f"<li>{guvenli[2:]}</li>")
+        elif satir.strip():
+            parcalar.append(guvenli)
+    parcalar.append("</pre>")
+    govde = "\n".join(parcalar)
+    return ("<!doctype html><html lang='tr'><meta charset='utf-8'>"
+            "<title>RetroOps · Kılavuz</title>"
+            "<body style='background:#0b1220;color:#e6edf7;"
+            "font-family:system-ui,Segoe UI,sans-serif;margin:0'>"
+            "<div style='max-width:860px;margin:0 auto;padding:28px 20px'>"
+            "<p><a href='/' style='color:#3b82f6;text-decoration:none'>"
+            "← Panele dön</a></p>"
+            + govde +
+            "</div></body>")
+
+
+def main(port: int = 8780, tarayici_ac: bool = True) -> None:
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"RetroOps E-Ticaret Operasyon: http://127.0.0.1:{port}")
+    adres = f"http://127.0.0.1:{port}"
+    print(f"RetroOps E-Ticaret Operasyon: {adres}", flush=True)
+    if tarayici_ac:
+        threading.Timer(1.0, lambda: webbrowser.open(adres)).start()
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
@@ -514,5 +636,7 @@ def main(port: int = 8780) -> None:
 
 
 if __name__ == "__main__":
-    p = int(sys.argv[1]) if len(sys.argv) > 1 else 8780
-    main(p)
+    argollar = sys.argv[1:]
+    portlar = [a for a in argollar if a.isdigit()]
+    main(int(portlar[0]) if portlar else 8780,
+         tarayici_ac="--tarayici-yok" not in argollar)

@@ -4,9 +4,22 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import sys
 from pathlib import Path
 
-DB_YOL = Path(__file__).resolve().parent.parent / "data" / "ops.db"
+
+def kok_dizin() -> Path:
+    """Veri klasörünün kökü.
+
+    PyInstaller ile derlenmiş ``.exe`` çalışırken ``exe`` yanındaki ``data/``
+    kullanılır; kaynak koddaysa proje kökü kullanılır.
+    """
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent.parent
+
+
+DB_YOL = kok_dizin() / "data" / "ops.db"
 
 
 def varsayilan_yol() -> Path:
@@ -139,3 +152,68 @@ def connect(db_yol: Path | str | None = None) -> sqlite3.Connection:
     _gecisler(conn)
     conn.commit()
     return conn
+
+
+ZORUNLU_TABLOLAR = {"siparisler", "iadeler", "gonderiler",
+                    "sikayetler", "entegrasyonlar"}
+
+
+def yedek_indir() -> bytes:
+    """Veritabanının ham kopyasını döndürür."""
+    yol = varsayilan_yol()
+    conn = connect()
+    try:
+        conn.execute("PRAGMA wal_checkpoint(PASSIVE)")
+        conn.commit()
+    finally:
+        conn.close()
+    if not yol.exists():
+        connect().close()
+    return yol.read_bytes()
+
+
+def yedek_yaz(ham: bytes) -> dict:
+    """Yedeği doğrular ve mevcut veritabanının yerine koyar (eskiyi saklar)."""
+    hedef = varsayilan_yol()
+    hedef.parent.mkdir(parents=True, exist_ok=True)
+    gecici = hedef.with_name(hedef.name + ".yeni")
+    eski = hedef.with_name(hedef.name + ".eski")
+    gecici.write_bytes(ham)
+    try:
+        conn = sqlite3.connect(str(gecici))
+        try:
+            kontrol = conn.execute("PRAGMA integrity_check").fetchone()[0]
+            tablolar = {r[0] for r in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'")}
+        finally:
+            conn.close()
+        if kontrol != "ok":
+            raise ValueError("Yedek dosyası bozuk (integrity_check hatası).")
+        eksik = ZORUNLU_TABLOLAR - tablolar
+        if eksik:
+            raise ValueError("Bu dosya RetroOps yedeği değil; eksik tablolar: "
+                             + ", ".join(sorted(eksik)) + ".")
+    except Exception as e:
+        gecici.unlink(missing_ok=True)
+        if isinstance(e, ValueError):
+            raise
+        raise ValueError("Yedek dosyası okunamadı; bu bir RetroOps yedeği değil. "
+                         + str(e)) from e
+    if hedef.exists():
+        eski.unlink(missing_ok=True)
+        hedef.replace(eski)
+    gecici.replace(hedef)
+    return {"durum": "ok", "mesaj": "Yedek yüklendi, veriler geri alınabilir.",
+            "geri_alabilir": eski.exists()}
+
+
+def yedek_geri_al() -> dict:
+    """Son yedek yüklemesinden önceki veritabanına döner."""
+    hedef = varsayilan_yol()
+    eski = hedef.with_name(hedef.name + ".eski")
+    if not eski.exists():
+        raise ValueError("Geri alınacak önceki yedek yok.")
+    if hedef.exists():
+        hedef.unlink()
+    eski.replace(hedef)
+    return {"durum": "ok", "mesaj": "Önceki veritabanına dönüldü."}

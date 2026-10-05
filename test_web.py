@@ -129,6 +129,48 @@ def test_siparis_ekle_listele(sunucu):
     assert ozet["siparis"]["kar"] == pytest.approx(29.37, abs=0.02)
 
 
+def test_kdv_sonrasi_net_kar_satis_listesi(sunucu):
+    # modül kapsamında tek DB paylaşıldığı için fark (delta) üzerinden sınanır
+    onceki, _ = govde(sunucu, "/api/ozet")
+    taban = onceki["siparis"]
+    kimlikler = set()
+    for oran, satis in ((20, 299), (10, 110)):
+        eklenen, _ = govde(sunucu, "/api/siparisler", "POST", {
+            "pazaryeri": "Trendyol", "urun": "Kulaklık", "adet": 1,
+            "alis_fiyati": 50, "satis_fiyati": satis, "komisyon_yuzde": 5,
+            "kargo_ucreti": 0, "paket_maliyeti": 0, "kdv_orani": oran,
+            "musteri": "Ayşe", "siparis_tarihi": "2026-09-15",
+        })
+        kimlikler.add(eklenen["id"])
+
+    liste, _ = govde(sunucu, "/api/siparisler")
+    satirlar = [s for s in liste["liste"] if s["id"] in kimlikler]
+    assert len(satirlar) == 2
+    yirmi = next(s for s in satirlar if s["satis_fiyati"] == 299)
+    assert yirmi["kdv_orani"] == 20
+    assert yirmi["satis_kdv_haric"] == pytest.approx(249.17, abs=0.02)
+    assert yirmi["kdv_tutar"] == pytest.approx(49.83, abs=0.02)
+    assert yirmi["kar"] == pytest.approx(184.22, abs=0.02)
+    on = next(s for s in satirlar if s["satis_fiyati"] == 110)
+    assert on["kdv_orani"] == 10
+    assert on["satis_kdv_haric"] == pytest.approx(100.0, abs=0.02)
+    assert on["kdv_tutar"] == pytest.approx(10.0, abs=0.02)
+    assert on["kar"] == pytest.approx(44.5, abs=0.02)
+
+    ozet, _ = govde(sunucu, "/api/ozet")
+    s = ozet["siparis"]
+    assert s["kdv_tutar"] - taban["kdv_tutar"] == pytest.approx(59.83, abs=0.05)
+    assert s["ciro"] - taban["ciro"] == pytest.approx(409, abs=0.05)
+    assert s["kar"] - taban["kar"] == pytest.approx(228.72, abs=0.05)
+
+    sayfa, _ = govde(sunucu, "/")
+    metin = sayfa if isinstance(sayfa, str) else sayfa.decode()
+    assert 'id="ozet-satis"' in metin
+    assert 'id="ozet-satis-toplam"' in metin
+    assert "Toplam KDV sonrası net kâr" in metin
+    assert "satisCiz" in metin
+
+
 def test_siparis_gecersiz(sunucu):
     sonuc, _ = govde(sunucu, "/api/siparisler", "POST", {"satis_fiyati": 100})
     assert "hata" in sonuc and "Ürün" in sonuc["hata"]
