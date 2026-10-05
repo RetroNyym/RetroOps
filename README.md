@@ -13,14 +13,19 @@ otomatik gelir.
 
 ## Hızlı başlangıç
 
-**Müşteri kurulumu (Python gerekmez):**
+**Müşteri kurulumu (Python gerekmez, tek yapması gereken API'leri bağlamak):**
 
 1. `RetroOps-v1.0.0.zip` dosyasını bir klasöre çıkarın.
-2. `RetroOps.exe` dosyasına çift tıklayın → tarayıcı otomatik açılır.
-3. İlk 14 gün deneme; sonra Panel → Lisans alanına anahtar girilir.
-4. Entegrasyonlar sekmesinden pazaryeri API hesapları bağlanır → **Test** → **Senkronize et**.
+2. `RetroOps.exe` dosyasına çift tıklayın (ikon: RetroOps **R+** logosu, Python
+   ikonu değil) → program arka planda başlar ve tarayıcı otomatik açılır.
+3. Hiçbir ayar gerekmez: `data/` klasörü kendiliğinden oluşur, 14 günlük deneme
+   otomatik başlar, ilk ekranda **"İlk adım: pazaryeri hesabınızı bağlayın"**
+   yönlendirmesi görünür.
+4. Entegrasyonlar sekmesinden API hesabını bağlayın → **Test** → **Senkronize et**.
+   Bu kadar; başka hiçbir şeye dokunmak gerekmez.
 
-Paket içeriği: `RetroOps.exe`, `_internal/`, `KILOGUZ.md`, `LICENSE.txt`, `Baslat.bat`.
+Paket içeriği: `RetroOps.exe`, `_internal/`, `retroops-logo.png`, `KILOGUZ.md`,
+`LICENSE.txt`, `Baslat.bat`.
 Veriler program klasöründeki `data/ops.db` dosyasında tutulur.
 
 **Geliştirici başlatması:**

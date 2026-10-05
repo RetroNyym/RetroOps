@@ -32,6 +32,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version='surum_bilgisi.txt',
+    icon=['retroops.ico'],
 )
 coll = COLLECT(
     exe,

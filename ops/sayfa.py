@@ -130,6 +130,15 @@ tr.satir-toplam .rakam{font-weight:400}
     <div class="kart"><div class="etiket">Açık şikâyet</div><div class="deger" id="k-sikayet">—</div></div>
     <div class="kart"><div class="etiket">Ort. çözüm süresi</div><div class="deger" id="k-cozum">—</div></div>
   </div>
+  <div class="panel gizle" id="ilk-adim">
+    <h3>İlk adım: pazaryeri hesabınızı bağlayın</h3>
+    <p class="not">Sipariş, kargo ve iade kayıtlarınızın otomatik gelmesi için
+    tek yapmanız gereken API hesabınızı bağlamak. Entegrasyonlar sekmesinden
+    platformunuzu seçin, anahtarlarınızı girin, <b>Test</b> deyin; ardından
+    <b>Senkronize et</b> ile veriler çekilsin. Öncelikle CSV şablonuyla da
+    veri yükleyebilirsiniz.</p>
+    <button type="button" id="ilk-git">Entegrasyonlar sekmesine git →</button>
+  </div>
   <div class="izgara2">
     <div class="panel"><h3>İade durum dağılımı (14 günlük yasal süre)</h3><div id="ozet-iade"><p class="bos">Veri yok</p></div></div>
     <div class="panel"><h3>Şikâyet kategorileri</h3><div id="ozet-sikayet"><p class="bos">Veri yok</p></div></div>
@@ -387,6 +396,8 @@ async function ozetYukle(){
     kg.className='deger '+(d.kargo.problem>0?'kt':'iy');
     $('#k-sikayet').textContent=d.sikayet.acik;
     $('#k-cozum').textContent=(d.sikayet.ortalama_cozum_gun==null?'—':d.sikayet.ortalama_cozum_gun+' gün');
+    const ilk=$('#ilk-adim');
+    if(ilk)ilk.classList.toggle('gizle',d.siparis.toplam>0);
 
     const dag=d.iade.dagilim||{};
     const toplamI=d.iade.toplam||0;
@@ -424,6 +435,7 @@ function satisCiz(liste,ozet){
     '<td><b class="'+(karT<0?'kt':'iy')+'">'+para(karT)+' ₺</b><span class="rakam">Toplam KDV sonrası net kâr</span></td></tr>':'';
 }
 $('#ozet-yenile').addEventListener('click',ozetYukle);
+$('#ilk-git').addEventListener('click',()=>sekmeAc('entegrasyon'));
 
 // ---- lisans & yedek ----
 function lisansGoster(d){
