@@ -11,6 +11,28 @@ otomatik gelir.
 > Arayüz: koyu tema, RetroOps (R+) markalı tek sayfa uygulama · Sunucu: saf stdlib
 > · Veri: yerel SQLite · Harici bağımlılık: **yok**
 
+## Ekran görüntüleri
+
+| Panel | İadeler |
+|---|---|
+| ![Operasyon paneli](gorseller/01-panel.png) | ![İade takibi](gorseller/02-iadeler.png) |
+
+| Kargo | Kâr hesabı |
+|---|---|
+| ![Kargo takibi](gorseller/03-kargo.png) | ![Kâr ve kırılma noktası](gorseller/04-kar-hesabi.png) |
+
+| Şikâyetler | Entegrasyonlar |
+|---|---|
+| ![Şikâyet izleyici](gorseller/05-sikayetler.png) | ![Pazaryeri entegrasyonları](gorseller/06-entegrasyonlar.png) |
+
+| CSV yükleme/dışa aktarma | |
+|---|---|
+| ![CSV](gorseller/07-csv.png) | |
+
+Görseller `python araclar/goruntu_al.py` ile **headless tarayıcıda** üretilir:
+masaüstüne hiç dokunmadan, her sekmeyi `#sekme` derin bağlantısıyla açarak
+(ör. `http://127.0.0.1:8786/#iade`) 1440×900 yakalar.
+
 ## Hızlı başlangıç
 
 **Müşteri kurulumu (Python gerekmez, tek yapması gereken API'leri bağlamak):**

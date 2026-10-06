@@ -25,7 +25,7 @@ PORTLAR = (8780, 8781, 8782, 8783, 8784)
 BASLIK = "RetroOps - E-Ticaret Operasyon Paneli"
 PENCERE = (1440, 900)
 MIN_PENCERE = (1024, 640)
-ARKA_RENK = "#0b1020"
+ARKA_RENK = "#070b14"
 
 
 def _kaydet(metin: str) -> None:
