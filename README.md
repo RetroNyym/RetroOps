@@ -17,12 +17,17 @@ otomatik gelir.
 
 1. `RetroOps-v1.0.0.zip` dosyasını bir klasöre çıkarın.
 2. `RetroOps.exe` dosyasına çift tıklayın (ikon: RetroOps **R+** logosu, Python
-   ikonu değil) → program arka planda başlar ve tarayıcı otomatik açılır.
+   ikonu değil) → **RetroOps masaüstü penceresi** açılır (tarayıcı değil;
+   adres çubuğu/sekme yok). Pencere kapatıldığında program da kapanır.
 3. Hiçbir ayar gerekmez: `data/` klasörü kendiliğinden oluşur, 14 günlük deneme
    otomatik başlar, ilk ekranda **"İlk adım: pazaryeri hesabınızı bağlayın"**
    yönlendirmesi görünür.
 4. Entegrasyonlar sekmesinden API hesabını bağlayın → **Test** → **Senkronize et**.
    Bu kadar; başka hiçbir şeye dokunmak gerekmez.
+
+Pencere, Windows 10/11'de yerleşik **WebView2** ile açılır; WebView2
+yüklenmemişse program kendiliğinden tarayıcıya düşer ve yine çalışır.
+Tarayıcı modunu isteyen `RetroOps.exe --tarayici` yazabilir.
 
 Paket içeriği: `RetroOps.exe`, `_internal/`, `retroops-logo.png`, `KILOGUZ.md`,
 `LICENSE.txt`, `Baslat.bat`.
@@ -38,8 +43,13 @@ python -m ops.web 8780       # veya: baslat.bat
 ```
 
 `baslat.bat` → panel / örnek veri / test menüsü.
-`.exe` derlemesi: `pyinstaller --onedir --windowed --name RetroOps --add-data "KILOGUZ.md;." baslat_exe.py`
-(çıktı `dist/RetroOps/` altına düşer).
+`.exe` derlemesi (masaüstü penceresi + R+ ikon + dosya sürümü):
+
+```powershell
+pyinstaller --onedir --windowed --name RetroOps --icon retroops.ico `
+  --version-file surum_bilgisi.txt --add-data "KILOGUZ.md;." --add-data "retroops.ico;." baslat_exe.py
+```
+(çıktı `dist/RetroOps/` altına düşer; `pywebview` kurulu olmalı)
 
 ## Sekmeler
 

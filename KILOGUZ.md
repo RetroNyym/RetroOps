@@ -10,18 +10,20 @@ entegrasyonları tek ekranda. **Python bilmeniz gerekmez.**
 1. Size gönderilen `RetroOps-v1.0.0.zip` dosyasını bir klasöre çıkarın.
    (Windows 10/11 sıkıştırılmış klasörü açar: sağ tık → **Tümünü çıkar**)
 2. Klászördeki **`RetroOps.exe`** dosyasına çift tıklayın.
-3. Program arka planda başlar ve tarayıcınız otomatik olarak açılır:
-   `http://127.0.0.1:8780`
+3. **RetroOps masaüstü penceresi** açılır (tarayıcı değil; adres çubuğu ve
+   sekme yoktur). Panelle yaptığınız her şey bu pencerede olur.
 
 > **Windows SmartScreen uyarısı** çıkarsa: *Daha fazla bilgi* → *Yine de çalıştır*.
 > Bu, yeni ve imzalanmamış programlarda normal bir uyarıdır.
 
-Elle açmak isterseniz tarayıcıya şu adresi yazın: `http://127.0.0.1:8780`
+Pencereyi kapatmanız programı kapatır. Yeniden açmak için `RetroOps.exe`'ye
+tekrar çift tıklamanız yeterlidir.
+
+Tarayıcıdan da açmak isterseniz (isterseniz): `http://127.0.0.1:8780`
+— ya da programı `RetroOps.exe --tarayici` ile başlatın.
 
 **Verileriniz nerede?** Program klasöründeki `data\ops.db` dosyasında.
 Bu dosyayı kopyalamanız tüm verilerinizi yedeklemek demektir.
-Programı kapatmak için görev çubuğundaki RetroOps simgesine sağ tık → kapat
-(veya `Alt+F4` ile açık pencereyi kapatıp program simgesini kapatın).
 
 ---
 
@@ -94,13 +96,15 @@ Haftada bir yedek almanızı öneririz.
 
 ## 6) Sık karşılaşılan durumlar
 
-- **Sayfa açılmıyor:** program kapalı olabilir. `RetroOps.exe`'ye tekrar
-  çift tıklayın. Hâlâ olmuyorsa tarayıcıda `http://127.0.0.1:8780` yazın.
+- **Pencere açılmıyor:** program kapalı olabilir. `RetroOps.exe`'ye tekrar
+  çift tıklayın. Hâlâ olmuyorsa tarayıcıda `http://127.0.0.1:8780` yazın
+  (program yine arka planda çalışıyordur).
 - **"Bağlantı reddedildi":** port başka bir program tarafından kullanılıyor.
   Bilgisayarı yeniden başlatıp tekrar deneyin.
 - **Panel boş görünüyor:** entegrasyon bağlayın veya **CSV** sekmesinden
   siparişlerinizi toplu yükleyin (şablonu oradan indirirsiniz).
-- **Tarayıcı otomatik açılmazsa:** adresi elle yazın (yukarıdaki bağlantı).
+- **Pencere yerine tarayıcı açıldı:** bilgisayarınızda WebView2 yoktur;
+  program bu durumda otomatik olarak tarayıcıya geçer, işlev farkı yoktur.
 - **KDV oranı yanlış görünüyorsa:** siparişin KDV alanını düzenleyin
   (CSV ile yüklerken `kdv_orani` sütunu tanımlıdır).
 

@@ -621,6 +621,14 @@ def KILAVUZ_HTML() -> str:
             "</div></body>")
 
 
+def arka_planda(port: int = 8780) -> tuple[ThreadingHTTPServer, str]:
+    """Sunucuyu arka planda (daemon) çalıştırır; pencere kapandığında süreç de biter."""
+    srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    threading.Thread(target=srv.serve_forever, daemon=True,
+                     name="retroops-sunucu").start()
+    return srv, f"http://127.0.0.1:{port}"
+
+
 def main(port: int = 8780, tarayici_ac: bool = True) -> None:
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     adres = f"http://127.0.0.1:{port}"
