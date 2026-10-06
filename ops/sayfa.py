@@ -151,6 +151,13 @@ tr:hover td{background:#3b82f60f}
 #bildirim.acik{opacity:1;transform:none}
 #bildirim.ok{background:#14532ded;color:#bbf7d0;border:1px solid #22c55e88}
 #bildirim.hata{background:#7f1d1ded;color:#fecaca;border:1px solid #ef444488}
+#guncelleme-band:not(.gizle){
+  flex-basis:100%;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;
+  background:linear-gradient(90deg,#12a29326,#3b82f626);border:1px solid #3b82f659;border-radius:12px;
+  padding:9px 15px;font-size:13.5px;box-shadow:0 8px 22px -14px #3b82f6
+}
+#guncelleme-band a{color:#93c5fd;font-weight:700;text-decoration:none}
+#guncelleme-band a:hover{text-decoration:underline}
 .gizle{display:none}
 .not{color:var(--mut);font-size:13px;margin-top:8px}
 .rakam{display:block;color:var(--mut);font-size:11px;line-height:1.4;font-variant-numeric:tabular-nums}
@@ -181,8 +188,10 @@ tr.satir-toplam .rakam{font-weight:400}
     <button data-sekme="kar">Kâr Hesabı</button>
     <button data-sekme="sikayet">Şikâyetler</button>
     <button data-sekme="entegrasyon">Entegrasyonlar</button>
+    <button data-sekme="sms">SMS</button>
     <button data-sekme="csv">CSV</button>
   </nav>
+  <div id="guncelleme-band" class="gizle"></div>
 </header>
 
 <main>
@@ -290,6 +299,38 @@ tr.satir-toplam .rakam{font-weight:400}
     <table><thead><tr><th>#</th><th>Firma</th><th>Takip no</th><th>Gönderim</th><th>Tahmini</th><th>Sorun</th><th>Durum</th><th>İşlem</th></tr></thead>
     <tbody id="k-tablo"><tr><td colspan="8" class="bos">Kayıt yok</td></tr></tbody></table>
   </div>
+  <div class="panel" id="ka-panel">
+    <div class="baslik-satir" style="margin-bottom:10px">
+      <div><h3 style="margin:0">Kargo API bağlantıları</h3>
+        <p>Firmanızın API bilgileriyle bağlanın; takip durumları tek tuşla güncellensin.</p></div>
+      <button class="ikincil kucuk" id="ka-yenile">Yenile</button>
+    </div>
+    <div class="izgara2">
+      <div class="panel" style="margin-top:0;box-shadow:none">
+        <div class="ust" style="border:0;padding:0;background:none">
+          <label>Firma<select id="ka-firma"></select></label>
+          <label>Bağlantı adı<input id="ka-ad" placeholder="örn. Ana şube"></label>
+        </div>
+        <div class="ust" id="ka-alanlar" style="border:0;padding:0;background:none"></div>
+        <div class="not" id="ka-not"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <button type="button" id="ka-test">Bağlantıyı test et</button>
+          <button type="button" class="ikincil" id="ka-kaydet">Kaydet ve bağla</button>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:0;box-shadow:none">
+        <h3>Sonuç</h3>
+        <div id="ka-sonuc"><p class="bos">Henüz işlem yapılmadı. Firma ve bilgileri seçip "Bağlantıyı test et" ile başlayın.</p></div>
+        <div style="margin-top:12px"><button type="button" id="ka-senkron">Takip durumlarını güncelle</button></div>
+        <div id="ka-senkron-sonuc"></div>
+      </div>
+    </div>
+    <table><thead><tr><th>#</th><th>Firma</th><th>Bağlantı</th><th>Kimlik</th><th>Son test</th><th>İşlem</th></tr></thead>
+    <tbody id="ka-tablo"><tr><td colspan="6" class="bos">Bağlı kargo API'si yok</td></tr></tbody></table>
+    <p class="not">Bağlantı bilgileri (API adresi, sorgu yolu, kimlik) firmanızın
+    API dokümanına göre doldurulur; adresler ve yollar firmadan firmaya değişir.
+    Test, girdiğiniz bilgilerle API adresine istek atarak kimliğinizi doğrular.</p>
+  </div>
 </section>
 
 <section id="sekme-kar" class="sekme">
@@ -367,6 +408,60 @@ tr.satir-toplam .rakam{font-weight:400}
   </div>
 </section>
 
+<section id="sekme-sms" class="sekme">
+  <div class="baslik-satir">
+    <div><h2>SMS entegrasyonu</h2><p>Müşterilere bilgilendirme SMS'i gönderin; gönderim geçmişi bu bilgisayarda saklanır.</p></div>
+    <span id="sms-rozet" class="rozet r-gri">Kontrol ediliyor…</span>
+  </div>
+  <div class="panel gizle" id="sms-kilit">
+    <h3>Kilitli — entegrasyon kodu gerekli</h3>
+    <p class="not" style="margin-top:0">SMS gönderimi, satın alımda size verilen
+    <b>SMS entegrasyon kodu</b> ile açılır. Kod yalnız bu bilgisayarda geçerlidir.
+    Makine kimliğiniz:</p>
+    <div class="ust" style="border:0;padding:0;background:none">
+      <span id="sms-makine" class="rozet r-mavi" style="align-self:center">—</span>
+      <label style="flex:1">Entegrasyon kodu<input id="sms-kod" placeholder="SMS-XXXXX-XXXXX-…"></label>
+      <button type="button" id="sms-etkinlestir">Etkinleştir</button>
+    </div>
+    <div id="sms-kilit-sonuc"></div>
+    <p class="not">Kodu satış kanalından alın; sorun yaşarsanız destek alabilirsiniz.</p>
+  </div>
+  <div class="izgara2 gizle" id="sms-ayar">
+    <div class="panel" style="margin-top:0">
+      <h3>Gönderici ayarları (Netgsm)</h3>
+      <div class="ust" style="border:0;padding:0;background:none">
+        <label>Kullanıcı kodu<input id="sms-kullanici" placeholder="örn. 5XX0001"></label>
+        <label>Şifre<input id="sms-parola" type="password" placeholder="SMS servis şifreniz"></label>
+        <label>Gönderici başlık<input id="sms-baslik" placeholder="BILGI"></label>
+      </div>
+      <div class="ust" style="border:0;padding:0;background:none">
+        <label style="flex:1">API adresi<input id="sms-adres" placeholder="https://api.netgsm.com.tr/rest/v1/sendSms"></label>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button type="button" id="sms-kaydet">Ayarları kaydet</button>
+        <button type="button" class="tehlike" id="sms-kaldir">Etkinliği kaldır</button>
+      </div>
+      <p class="not">Kullanıcı kodu, şifre ve başlık SMS sağlayıcınızın panelinden
+      alınır; başlığın kayıtlı olması gerekir. Şifre bu bilgisayarda şifrelenerek
+      saklanır ve hiçbir yere geri gönderilmez.</p>
+    </div>
+    <div class="panel" style="margin-top:0">
+      <h3>SMS gönder</h3>
+      <div class="ust" style="border:0;padding:0;background:none">
+        <label>Telefon<input id="sms-alici" placeholder="0532 123 45 67"></label>
+        <label style="flex:2">Mesaj<textarea id="sms-mesaj" rows="3" placeholder="Siparişiniz kargoya verildi…"></textarea></label>
+        <button type="button" id="sms-gonder">Gönder</button>
+      </div>
+      <div id="sms-sonuc"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Gönderim geçmişi</h3>
+    <table><thead><tr><th>#</th><th>Alıcı</th><th>Mesaj</th><th>Başlık</th><th>Zaman</th><th>Sonuç</th></tr></thead>
+    <tbody id="sms-tablo"><tr><td colspan="6" class="bos">Kayıt yok</td></tr></tbody></table>
+  </div>
+</section>
+
 <section id="sekme-csv" class="sekme">
   <div class="baslik-satir">
     <div><h2>CSV içe / dışa aktarma</h2><p>Listeleri Excel uyumlu CSV olarak indirin, siparişleri toplu yükleyin.</p></div>
@@ -438,11 +533,12 @@ function sekmeAc(ad){
   document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('aktif',b.dataset.sekme===ad));
   if(ad==='ozet')ozetYukle();
   if(ad==='iade')iadelerYukle();
-  if(ad==='kargo')gonderilerYukle();
+  if(ad==='kargo'){gonderilerYukle();kargoApiYukle();}
   if(ad==='kar')karVerisi();
   if(ad==='sikayet')sikayetYukle();
   if(ad==='csv')csvHazir();
   if(ad==='entegrasyon')entegrasyonYukle();
+  if(ad==='sms')smsYukle();
 }
 
 // ---- panel ----
@@ -890,6 +986,192 @@ $('#e-tablo').addEventListener('click',async e=>{
   b.disabled=false;
 });
 
+// ---- sms ----
+async function smsYukle(){
+  try{
+    const d=await api('/api/sms');
+    const etkin=!!(d.durum&&d.durum.etkin);
+    $('#sms-makine').textContent=(d.durum&&d.durum.makine)||'—';
+    const r=$('#sms-rozet');
+    r.textContent=etkin?'Etkin':'Kilitli';
+    r.className='rozet '+(etkin?'r-yesil':'r-kirmizi');
+    $('#sms-kilit').classList.toggle('gizle',etkin);
+    $('#sms-ayar').classList.toggle('gizle',!etkin);
+    const a=d.ayarlar||{};
+    if(a.kullanici)$('#sms-kullanici').value=a.kullanici;
+    if(a.baslik)$('#sms-baslik').value=a.baslik;
+    if(a.apiAdres)$('#sms-adres').value=a.apiAdres;
+    const liste=d.gecmis||[];
+    $('#sms-tablo').innerHTML=liste.length?liste.map(s=>
+      '<tr><td>'+s.id+'</td><td>'+esc(s.alici)+'</td><td>'+esc(s.mesaj)+'</td>'+
+      '<td>'+esc(s.baslik||'—')+'</td><td><span class="rakam">'+esc(s.gonderim_zamani)+'</span></td>'+
+      '<td>'+(s.durum==='ok'?'<span class="rozet r-yesil">Gönderildi</span>':'<span class="rozet r-kirmizi">Hata</span>')+
+      (s.sonuc?'<div class="not" style="margin:0">'+esc(s.sonuc)+'</div>':'')+'</td></tr>'
+    ).join(''):'<tr><td colspan="6" class="bos">Kayıt yok</td></tr>';
+  }catch(e){bildir(e.message,'hata');}
+}
+$('#sms-etkinlestir').addEventListener('click',async()=>{
+  const kod=$('#sms-kod').value.trim();
+  if(!kod){bildir('Entegrasyon kodunu girin','hata');return;}
+  try{
+    const d=await post('/api/sms/etkinlestir',{kod});
+    $('#sms-kod').value='';
+    $('#sms-kilit-sonuc').innerHTML='<div class="basari-cubugu">'+esc(d.mesaj||'Etkinleştirildi.')+'</div>';
+    bildir(d.mesaj||'SMS entegrasyonu etkinleştirildi');
+    await smsYukle();
+  }catch(e){
+    $('#sms-kilit-sonuc').innerHTML='<div class="uyari-cubugu">'+esc(e.message)+'</div>';
+    bildir(e.message,'hata');
+  }
+});
+$('#sms-kaydet').addEventListener('click',async()=>{
+  try{
+    await post('/api/sms/ayar',{
+      kullanici:$('#sms-kullanici').value.trim(),
+      parola:$('#sms-parola').value,
+      baslik:$('#sms-baslik').value.trim(),
+      apiAdres:$('#sms-adres').value.trim()
+    });
+    $('#sms-parola').value='';
+    bildir('Gönderici ayarları kaydedildi');
+    await smsYukle();
+  }catch(e){bildir(e.message,'hata');}
+});
+$('#sms-kaldir').addEventListener('click',async()=>{
+  if(!window.confirm('SMS entegrasyonu kilitlensin mi? Gönderici ayarlarınız korunur.'))return;
+  try{
+    const d=await post('/api/sms/kaldir');
+    bildir(d.mesaj||'SMS entegrasyonu kilitlendi');
+    $('#sms-kilit-sonuc').innerHTML='';
+    await smsYukle();
+  }catch(e){bildir(e.message,'hata');}
+});
+$('#sms-gonder').addEventListener('click',async()=>{
+  try{
+    const d=await post('/api/sms/gonder',{alici:$('#sms-alici').value.trim(),mesaj:$('#sms-mesaj').value});
+    $('#sms-sonuc').innerHTML=sonucKutu(d);
+    bildir(d.mesaj||'SMS gönderildi',d.durum==='ok'?'ok':'hata');
+    if(d.durum==='ok')$('#sms-mesaj').value='';
+    await smsYukle();
+  }catch(e){
+    $('#sms-sonuc').innerHTML='<div class="uyari-cubugu">'+esc(e.message)+'</div>';
+    bildir(e.message,'hata');
+  }
+});
+
+// ---- kargo API ----
+let KA_FIRMALAR=[];
+function kaSecilen(){return KA_FIRMALAR.find(f=>f.id===$('#ka-firma').value)||KA_FIRMALAR[0];}
+function kaAlanlariKur(){
+  const f=kaSecilen();if(!f)return;
+  $('#ka-not').textContent=f.not||'';
+  $('#ka-alanlar').innerHTML=(f.alanlar||[]).map(a=>
+    '<label>'+esc(a.ad)+
+    '<input data-alan="'+esc(a.id)+'" data-gizli="'+(a.gizli?1:0)+'" type="'+(a.gizli?'password':'text')+'" placeholder="'+esc(a.varsayilan||'')+'">'+
+    (a.ipucu?'<span class="not" style="margin:0">'+esc(a.ipucu)+'</span>':'')+
+    '</label>').join('');
+}
+function kaDegerleri(){
+  const f=kaSecilen(),ayarlar={},kimlik={};
+  document.querySelectorAll('#ka-alanlar input').forEach(i=>{
+    const v=i.value.trim();
+    if(!v)return;
+    (i.dataset.gizli==='1'?kimlik:ayarlar)[i.dataset.alan]=v;
+  });
+  return {firma:f?f.id:'',ad:$('#ka-ad').value.trim(),ayarlar,kimlik};
+}
+async function kargoApiYukle(){
+  try{
+    const d=await api('/api/kargo/api');
+    KA_FIRMALAR=d.firmalar||[];
+    if(!$('#ka-firma').options.length){
+      $('#ka-firma').innerHTML=KA_FIRMALAR.map(f=>'<option value="'+f.id+'">'+esc(f.ad)+'</option>').join('');
+      kaAlanlariKur();
+    }
+    const liste=d.liste||[];
+    $('#ka-tablo').innerHTML=liste.length?liste.map(k=>
+      '<tr><td>'+k.id+'</td><td>'+esc(k.platform_ad)+'</td><td>'+esc(k.ad)+'</td>'+
+      '<td>'+(k.dolu.length?'<span class="rozet r-yesil">'+k.dolu.length+' alan dolu</span>':'<span class="rozet r-sari">eksik</span>')+'</td>'+
+      '<td>'+(k.son_test?eRozet(k.son_test_sonuc)+'<div class="not">'+esc(k.son_test)+'</div>':'<span class="rozet r-gri">Test edilmedi</span>')+'</td>'+
+      '<td><button class="kucuk ikincil" data-ka="test" data-id="'+k.id+'">Test</button> '+
+      '<button class="kucuk tehlike" data-ka="sil" data-id="'+k.id+'">Sil</button></td></tr>'
+    ).join(''):'<tr><td colspan="6" class="bos">Bağlı kargo API\'si yok — yukarıdan bilgilerinizi girin.</td></tr>';
+  }catch(e){bildir(e.message,'hata');}
+}
+$('#ka-firma').addEventListener('change',kaAlanlariKur);
+$('#ka-yenile').addEventListener('click',kargoApiYukle);
+$('#ka-test').addEventListener('click',async()=>{
+  try{
+    $('#ka-sonuc').innerHTML='<p class="bos">Test ediliyor…</p>';
+    const s=await post('/api/kargo/api/test',kaDegerleri());
+    $('#ka-sonuc').innerHTML=sonucKutu(s);
+    bildir(s.mesaj,s.durum==='ok'?'ok':'hata');
+  }catch(e){
+    $('#ka-sonuc').innerHTML='<p class="bos">Test tamamlanmadı: '+esc(e.message)+'</p>';
+    bildir(e.message,'hata');
+  }
+});
+$('#ka-kaydet').addEventListener('click',async()=>{
+  try{
+    const k=await post('/api/kargo/api',kaDegerleri());
+    bildir('"'+k.ad+'" kaydedildi');
+    $('#ka-ad').value='';
+    kaAlanlariKur();
+    $('#ka-sonuc').innerHTML='<div class="basari-cubugu">Bağlantı kaydedildi. "Takip durumlarını güncelle" ile gönderiler sorulur.</div>';
+    await kargoApiYukle();
+  }catch(e){bildir(e.message,'hata');}
+});
+$('#ka-senkron').addEventListener('click',async()=>{
+  try{
+    $('#ka-senkron-sonuc').innerHTML='<p class="bos">Durumlar sorgulanıyor…</p>';
+    const s=await post('/api/kargo/senkron');
+    $('#ka-senkron-sonuc').innerHTML=sonucKutu(s)+
+      ((s.notlar&&s.notlar.length)?'<div class="not">'+s.notlar.map(n=>esc(n)).join('<br>')+'</div>':'');
+    bildir(s.mesaj||'Senkron tamamlandı',s.durum==='ok'?'ok':'hata');
+    await gonderilerYukle();
+    ozetYukle();
+  }catch(e){
+    $('#ka-senkron-sonuc').innerHTML='<p class="bos">'+esc(e.message)+'</p>';
+    bildir(e.message,'hata');
+  }
+});
+$('#ka-tablo').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-ka]');
+  if(!b)return;
+  const id=b.dataset.id,islem=b.dataset.ka;
+  b.disabled=true;
+  try{
+    if(islem==='test'){
+      $('#ka-sonuc').innerHTML='<p class="bos">Test ediliyor…</p>';
+      const s=await post('/api/kargo/api/'+id+'/test');
+      $('#ka-sonuc').innerHTML=sonucKutu(s);
+      bildir(s.mesaj,s.durum==='ok'?'ok':'hata');
+      await kargoApiYukle();
+    }else if(islem==='sil'){
+      if(!window.confirm('Bu kargo API bağlantısı silinsin mi?'))return;
+      await post('/api/kargo/api/'+id+'/sil');
+      bildir('Bağlantı silindi');
+      await kargoApiYukle();
+    }
+  }catch(err){bildir(err.message,'hata');}
+  b.disabled=false;
+});
+
+// ---- güncelleme ----
+async function guncellemeKontrol(){
+  try{
+    const d=await api('/api/guncelleme');
+    if(!d||!d.yeni_var)return;
+    const b=$('#guncelleme-band');
+    let html='<b>Yeni sürüm var: '+esc(d.son)+'</b><span>kurulu sürüm '+esc(d.mevcut)+'</span>';
+    if(d.not)html+='<span>'+esc(d.not)+'</span>';
+    if(d.indirme)html+='<a href="'+esc(d.indirme)+'" target="_blank" rel="noopener">İndir →</a>';
+    else html+='<span>Güncel dosyaları satış kanalından isteyin.</span>';
+    b.innerHTML=html;
+    b.classList.remove('gizle');
+  }catch(e){}
+}
+
 // ---- csv ----
 function csvHazir(){
   if(!$('#v-tablo').options.length){
@@ -935,7 +1217,12 @@ async function baslat(){
     await siparisleriYukle();
     ozetYukle();
     const h=location.hash.slice(1);
-    if(h&&['ozet','iade','kargo','kar','sikayet','entegrasyon','csv'].includes(h))sekmeAc(h);
+    if(h&&['ozet','iade','kargo','kar','sikayet','entegrasyon','sms','csv'].includes(h))sekmeAc(h);
+    else if(h==='kargo-api'){
+      sekmeAc('kargo');
+      setTimeout(()=>{const k=$('#ka-panel');if(k)k.scrollIntoView();},150);
+    }
+    guncellemeKontrol();
   }catch(e){bildir('Başlatma hatası: '+e.message,'hata');}
 }
 document.addEventListener('DOMContentLoaded',baslat);

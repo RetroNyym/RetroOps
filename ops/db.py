@@ -105,6 +105,17 @@ CREATE TABLE IF NOT EXISTS entegrasyonlar (
     UNIQUE (platform, ad)
 );
 
+CREATE TABLE IF NOT EXISTS sms_gonderim (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alici TEXT NOT NULL,
+    mesaj TEXT NOT NULL,
+    baslik TEXT NOT NULL DEFAULT '',
+    gonderim_zamani TEXT NOT NULL DEFAULT (datetime('now')),
+    durum TEXT NOT NULL DEFAULT 'ok',
+    http_kod INTEGER,
+    sonuc TEXT NOT NULL DEFAULT ''
+);
+
 CREATE INDEX IF NOT EXISTS idx_iadeler_durum ON iadeler(durum);
 CREATE INDEX IF NOT EXISTS idx_gonderiler_durum ON gonderiler(son_durum);
 CREATE INDEX IF NOT EXISTS idx_sikayetler_kategori ON sikayetler(kategori);

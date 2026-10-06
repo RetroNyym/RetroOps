@@ -7,9 +7,9 @@ entegrasyonları tek ekranda. **Python bilmeniz gerekmez.**
 
 ## 1) Kurulum (2 dakika)
 
-1. Size gönderilen `RetroOps-v1.0.0.zip` dosyasını bir klasöre çıkarın.
+1. Size gönderilen `RetroOps-v1.1.0.zip` dosyasını bir klasöre çıkarın.
    (Windows 10/11 sıkıştırılmış klasörü açar: sağ tık → **Tümünü çıkar**)
-2. Klászördeki **`RetroOps.exe`** dosyasına çift tıklayın.
+2. Klasördeki **`RetroOps.exe`** dosyasına çift tıklayın.
 3. **RetroOps masaüstü penceresi** açılır (tarayıcı değil; adres çubuğu ve
    sekme yoktur). Panelle yaptığınız her şey bu pencerede olur.
 
@@ -70,11 +70,12 @@ Bu dosyayı kopyalamanız tüm verilerinizi yedeklemek demektir.
 |---|---|
 | **Panel** | Ciro, net kâr, KDV, satış listesi, iade/kargo/şikâyet özeti, lisans ve yedek |
 | **İadeler** | 14 günlük yasal süre; durum ilerletme; süresi aşanlar kırmızı |
-| **Kargo** | Gönderi + takip no; tahmini teslimden 3 gün sonra gecikme uyarısı |
+| **Kargo** | Gönderi + takip no; tahmini teslimden 3 gün sonra gecikme uyarısı; kargo firması API hesabını bağlama, test ve otomatik durum güncelleme |
 | **Kâr Hesabı** | Komisyon + kargo + paket + KDV ile net kâr ve kırılma noktası |
 | **Şikâyetler** | Müşteri şikâyet kaydı, çözüm oranı ve süreleri |
 | **Entegrasyonlar** | Pazaryeri hesaplarını bağlama, test ve senkronizasyon |
 | **CSV** | Listeleri Excel'e indirme, şablon alma, toplu sipariş yükleme |
+| **SMS** | Netgsm ile bilgilendirme SMS'i gönderme (satıcıdan alınan kodla açılır) |
 
 **KDV:** Her siparişteki KDV oranı (`kdv_orani`) üzerinden KDV tutarı ve
 KDV sonrası net kâr otomatik hesaplanır; Panel → Satışlar listesinde satır satır,
@@ -82,7 +83,59 @@ altında toplam olarak görünür.
 
 ---
 
-## 5) Yedekleme ve geri alma
+## 5) SMS entegrasyonunu açma (Netgsm)
+
+1. Panel → **Lisans** kutusundaki **makine kimliğinizi** satış kanalına gönderin.
+2. Satıcı size `SMS-…` biçiminde **imzalı bir aktivasyon kodu** iletir.
+3. Üst menüden **SMS** sekmesine girin; sekme kilitli ekranda açılır.
+4. Kodu yapıştırıp **Etkinleştir** deyin → gönderim ekranı açılır.
+5. Netgsm'den aldığınız **kullanıcı adı**, **API şifresi** ve **gönderici
+   başlığı**nı doldurun → **Kaydet**.
+6. Telefon numarası ve mesajı yazıp **Gönder** deyin; sonuç ve saat aynı
+   sayfanın altında listelenir.
+
+> Gönderici bilgileri bilgisayarınızda şifreli saklanır (`data\.sms`); şifre
+> hiçbir ekranda veya yanıtta görünmez. **Kapat** düğmesi sekmeyi yeniden
+> kilitler, istediğinizde aynı kodla tekrar açabilirsiniz.
+> Sadece **cep numaraları** gönderilebilir; 0850/0212 gibi sabit hatlar
+> reddedilir.
+
+---
+
+## 6) Kargo firması API bağlantısı
+
+**Kargo** sekmesindeki **Kargo API bağlantıları** paneli, takip sorgularını
+elle yapmaktan kurtarır:
+
+1. **Firma** seçin (Yurtiçi, Aras, MNG, Sürat, Sendeo, PTT).
+2. Firmanızın API dokümanındaki **taban adresi**ni yazın (örn.
+   `https://api.firma.com.tr`); gerekirse sorgu yolu ve takip alanını
+   değiştirin.
+3. Kimlik türünü seçin: **kullanıcı adı/şifre** (Basic) veya **API anahtarı**
+   (Bearer), bilgileri girin.
+4. **Test** deyin → panel gerçek isteği atar ve yanıtı/HTTP kodunu gösterir.
+5. **Kaydet** → bağlantı listeye düşer.
+6. **Senkronize et** → gönderilerinizdeki takip numaraları sorgulanır, bulunan
+   durum (yolda/şubede/teslim edildi/…) gönderilere işlenir.
+
+> "Ağ hatası" görürseniz adresi ya da interneti kontrol edin. Tek seferde en
+> fazla 100 takip numarası sorgulanır. Firma bilgilerinizi hiç bir sunucuya
+> göndermezsiniz; sorgular kendi bilgisayarınızdan firmaya gider.
+
+---
+
+## 7) Güncellemeler
+
+- Program açıldığında uzak sürüm dosyası kontrol edilir; yeni sürüm çıktığında
+  panelin en üstünde **"Yeni sürüm var"** bandı belirir.
+- Bantta kurulu sürüm, sürüm notu ve (varsa) **İndir →** bağlantısı görünür;
+  bağlantı yoksa "Güncel dosyaları satış kanalından isteyin." yazar.
+- Kontrol yaklaşık 6 saatte bir tekrarlanır; internet yoksa sessizce geçer,
+  panel normal çalışmaya devam eder.
+
+---
+
+## 8) Yedekleme ve geri alma
 
 - **Yedek indir (.db)** → tüm veriniz tek dosya olarak iner. Bu dosyayı
   USB'ye, bulut diske veya e-postaya atabilirsiniz.
@@ -94,7 +147,7 @@ Haftada bir yedek almanızı öneririz.
 
 ---
 
-## 6) Sık karşılaşılan durumlar
+## 9) Sık karşılaşılan durumlar
 
 - **Pencere açılmıyor:** program kapalı olabilir. `RetroOps.exe`'ye tekrar
   çift tıklayın. Hâlâ olmuyorsa tarayıcıda `http://127.0.0.1:8780` yazın
@@ -110,7 +163,7 @@ Haftada bir yedek almanızı öneririz.
 
 ---
 
-## 7) Gizlilik
+## 10) Gizlilik
 
 - Tüm veriler (sipariş, müşteri, şikâyet, anahtarlar) **yalnız bu
   bilgisayarda** tutulur; hiçbir veri satıcısı olmayan bir sunucuya gönderilmez.
@@ -121,7 +174,7 @@ Haftada bir yedek almanızı öneririz.
 
 ---
 
-## 8) Destek
+## 11) Destek
 
 - Sorularınız için **RetroOps satış kanalı** üzerinden yazın.
 - Sorun bildirirken şu bilgileri ekleyin: Makine kimliği (Panel → Lisans),

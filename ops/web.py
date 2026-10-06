@@ -13,7 +13,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import __surum__, csv_io, entegrasyon, iade, kargo, kar, lisans, sikayet
+from . import (__surum__, csv_io, entegrasyon, guncelleme, iade, kargo,
+               kargo_api, kar, lisans, sikayet, sms)
 from .db import kok_dizin, connect, yedek_geri_al, yedek_indir, yedek_yaz
 from .sayfa import LOGO_SVG, PAGE
 
@@ -236,12 +237,38 @@ class Handler(BaseHTTPRequestHandler):
                         for p, kategoriler in kar.KOMISYON_TABLOSU.items()
                     }
                 })
+            elif yol == "/api/guncelleme":
+                self._json(200, guncelleme.kontrol())
+            elif yol == "/api/sms":
+                conn = connect()
+                try:
+                    veri = {
+                        "durum": sms.durum(),
+                        "ayarlar": sms.ayar_oku(),
+                        "gecmis": sms.gecmis(conn),
+                    }
+                finally:
+                    conn.close()
+                self._json(200, veri)
+            elif yol == "/api/kargo/api":
+                conn = connect()
+                try:
+                    veri = {
+                        "firmalar": kargo_api.firma_listesi(),
+                        "liste": kargo_api.liste(conn),
+                    }
+                finally:
+                    conn.close()
+                self._json(200, veri)
             elif yol == "/api/entegrasyonlar":
                 conn = connect()
                 try:
                     veri = {
                         "platformlar": entegrasyon.platform_listesi(),
-                        "liste": entegrasyon.liste(conn),
+                        "liste": [
+                            k for k in entegrasyon.liste(conn)
+                            if not k["platform"].startswith(kargo_api.ON_EK)
+                        ],
                     }
                 finally:
                     conn.close()
@@ -410,6 +437,72 @@ class Handler(BaseHTTPRequestHandler):
                 conn = connect()
                 try:
                     sonuc = entegrasyon.sil(conn, int(m.group(1)))
+                finally:
+                    conn.close()
+                self._json(200, sonuc)
+            elif yol == "/api/sms/etkinlestir":
+                v = self._govde_json()
+                self._json(200, sms.etkinlestir(str(v.get("kod") or "")))
+            elif yol == "/api/sms/kaldir":
+                self._json(200, sms.kaldir())
+            elif yol == "/api/sms/ayar":
+                self._json(200, sms.ayar_yaz(self._govde_json()))
+            elif yol == "/api/sms/gonder":
+                v = self._govde_json()
+                conn = connect()
+                try:
+                    sonuc = sms.gonder(
+                        conn, str(v.get("alici") or ""),
+                        str(v.get("mesaj") or ""),
+                    )
+                finally:
+                    conn.close()
+                self._json(200, sonuc)
+            elif yol == "/api/kargo/api":
+                v = self._govde_json()
+                conn = connect()
+                try:
+                    kayit = kargo_api.kaydet(
+                        conn,
+                        firma=str(v.get("firma") or ""),
+                        ad=str(v.get("ad") or ""),
+                        ayarlar=v.get("ayarlar") or {},
+                        kimlik=v.get("kimlik") or {},
+                    )
+                finally:
+                    conn.close()
+                self._json(201, kayit)
+            elif yol == "/api/kargo/api/test":
+                v = self._govde_json()
+                sonuc = kargo_api.test(
+                    None,
+                    firma=str(v.get("firma") or ""),
+                    ayarlar=v.get("ayarlar") or {},
+                    kimlik=v.get("kimlik") or {},
+                )
+                self._json(200, sonuc)
+            elif (m := re.fullmatch(r"/api/kargo/api/(\d+)/test", yol)):
+                conn = connect()
+                try:
+                    kayit = entegrasyon.satir(conn, int(m.group(1)))
+                    if kayit is None:
+                        self._hata(404, f"Bağlantı bulunamadı: {m.group(1)}")
+                        return
+                    sonuc = kargo_api.test(conn, kayit)
+                finally:
+                    conn.close()
+                self._json(200, sonuc)
+            elif (m := re.fullmatch(r"/api/kargo/api/(\d+)/sil", yol)):
+                conn = connect()
+                try:
+                    sonuc = kargo_api.sil(conn, int(m.group(1)))
+                finally:
+                    conn.close()
+                self._json(200, sonuc)
+            elif yol == "/api/kargo/senkron":
+                conn = connect()
+                try:
+                    sonuc = kargo_api.senkron(conn)
                 finally:
                     conn.close()
                 self._json(200, sonuc)

@@ -4,7 +4,7 @@ Headless Edge ile, masaüstüne hiç dokunmadan yakalar; her sekme
 `#sekme` derin bağlantısıyla açılır (ör. http://127.0.0.1:8786/#iade).
 
 Kullanım: python araclar/goruntu_al.py
-Çıktı:   gorseller/01-panel.png ... gorseller/07-csv.png
+Çıktı:   gorseller/01-panel.png ... gorseller/09-kargo-api.png
 """
 
 import shutil
@@ -30,6 +30,8 @@ SEKMELER = [
     ("sikayet", "05-sikayetler"),
     ("entegrasyon", "06-entegrasyonlar"),
     ("csv", "07-csv"),
+    ("sms", "08-sms"),
+    ("kargo-api", "09-kargo-api"),
 ]
 CIKTI = KOK / "gorseller"
 

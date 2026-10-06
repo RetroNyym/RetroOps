@@ -25,9 +25,13 @@ otomatik gelir.
 |---|---|
 | ![Şikâyet izleyici](gorseller/05-sikayetler.png) | ![Pazaryeri entegrasyonları](gorseller/06-entegrasyonlar.png) |
 
-| CSV yükleme/dışa aktarma | |
+| CSV yükleme/dışa aktarma | SMS entegrasyonu |
 |---|---|
-| ![CSV](gorseller/07-csv.png) | |
+| ![CSV](gorseller/07-csv.png) | ![SMS entegrasyonu](gorseller/08-sms.png) |
+
+| Kargo API bağlantıları | |
+|---|---|
+| ![Kargo API](gorseller/09-kargo-api.png) | |
 
 Görseller `python araclar/goruntu_al.py` ile **headless tarayıcıda** üretilir:
 masaüstüne hiç dokunmadan, her sekmeyi `#sekme` derin bağlantısıyla açarak
@@ -37,7 +41,7 @@ masaüstüne hiç dokunmadan, her sekmeyi `#sekme` derin bağlantısıyla açara
 
 **Müşteri kurulumu (Python gerekmez, tek yapması gereken API'leri bağlamak):**
 
-1. `RetroOps-v1.0.0.zip` dosyasını bir klasöre çıkarın.
+1. `RetroOps-v1.1.0.zip` dosyasını bir klasöre çıkarın.
 2. `RetroOps.exe` dosyasına çift tıklayın (ikon: RetroOps **R+** logosu, Python
    ikonu değil) → **RetroOps masaüstü penceresi** açılır (tarayıcı değil;
    adres çubuğu/sekme yok). Pencere kapatıldığında program da kapanır.
@@ -79,11 +83,12 @@ pyinstaller --onedir --windowed --name RetroOps --icon retroops.ico `
 |---|---|---|
 | **Panel** | Ciro, net kâr, marj, açık/geciken iade, problemli gönderi, şikâyet dağılımı ve ort. çözüm süresi kartları; **satış listesi**: her satışta KDV oranı, otomatik KDV tutarı ve KDV sonrası net kâr, altında toplam ciro + toplam KDV + toplam KDV sonrası net kâr; **Lisans** (deneme/anahtar) ve **Veri & Yedek** panelleri | "Nerede yanıyorum?" |
 | **İadeler** | 14 günlük yasal süre sayacı, `talep → onay → kargoya verildi → inceleme → tamamlandı` durum makinesi, süresi aşanlar kırmızı | Şikâyetlerin %63'ü iade-değişim |
-| **Kargo** | Gönderi + takip no, tahmini teslimden 3 gün sonra otomatik gecikme; kayıp/yanlış/hasar işaretleme; "sadece problemli" filtresi | Teslimat gecikmesi / kayıp gönderi |
+| **Kargo** | Gönderi + takip no, tahmini teslimden 3 gün sonra otomatik gecikme; kayıp/yanlış/hasar işaretleme; "sadece problemli" filtresi; **Kargo API bağlantıları** paneli: 6 kargo firması (Yurtiçi, Aras, MNG, Sürat, Sendeo, PTT) hesabını bağla, **Test** ile canlı yanıt dene, **Senkronize et** ile takip numaralarını sorgula ve gönderi durumlarını otomatik güncelle | Teslimat gecikmesi / kayıp gönderi |
 | **Kâr Hesabı** | Komisyon + kargo + paket + KDV + diğer kesintilerle net kâr; **minimum (kırılma) fiyatı** ve hedef kârlı fiyat; 2026 komisyon tablosu | Komisyon oranlarının yükselmesi, fiyat hassasiyeti |
 | **Şikâyetler** | Türkiye pazarının başlıklarıyla kayıt, çözüm oranı ve ort. çözüm süresi | Müşteri şikâyet takibi |
 | **Entegrasyonlar** | 9 pazaryeri/servis API hesabını **bağla** (Trendyol, Hepsiburada, N11, ÇiçekSepeti, Shopier, Pazarama, Shopify, WooCommerce, Amazon); şifreli sakla, **Test** ile bağlantıyı dene, **Senkronize et** ile sipariş/kargo/iade kayıtlarını otomatik çek | Manuel sipariş girişi ve takip no kopyalama |
 | **CSV** | Tablo listesini Excel uyumlu indir, şablon al, siparişleri toplu yükle | Elle tek tek giriş yok |
+| **SMS** | Netgsm üzerinden toplu/tekil SMS gönderimi; **kilitli gelir**, satıcıdan alınan imzalı aktivasyon koduyla açılır; gönderici başlığı, kullanıcı adı ve API şifresi kaydedilir; gönderim geçmişi | Müşteriye bilgilendirme SMS'i, kargo/iade hatırlatması |
 
 ## Mimari
 
@@ -101,11 +106,17 @@ eticaret-ops/
     adapters/      9 platform adaptörü (temel.py + trendyol, hepsiburada, n11,
                    ciceksepeti, shopier, pazarama, shopify, woocommerce, amazon)
     sync.py        Adaptör çıktısını sipariş/gönderi/iade tablolarına yazar
+    kargo_api.py   6 kargo firması (Yurtiçi/Aras/MNG/Sürat/Sendeo/PTT) API
+                   spesifikasyonu, canlı test, takip sorgu + otomatik senkron
+    sms.py         Netgsm SMS: imzalı aktivasyon kodu, şifreli gönderici ayarları,
+                   gönderim + geçmiş
+    guncelleme.py  Public GitHub sürüm dosyasından uzaktan güncelleme kontrolü
+                   (6 saat önbellek, ağ hatası sessiz)
     sifre.py       Kimlik sırlarını şifreler (Fernet varsa, yoksa stdlib PBKDF2+HMAC)
     sayfa.py       Panel HTML/CSS/JS + RetroOps SVG logo
     web.py         http.server JSON API
   data/ops.db      Veritabanı (ilk çalıştırmada oluşur)
-  test_*.py        72 test
+  test_*.py        97 test
   baslat.bat, README.md, requirements.txt
 ```
 
@@ -126,9 +137,17 @@ eticaret-ops/
 | GET/POST | `/api/sikayetler` · POST `/api/sikayetler/{id}/durum` | Kayıt / çözüm |
 | POST | `/api/hesapla` | Kâr dökümü + minimum + hedefli fiyat |
 | GET | `/api/komisyonlar` | Komisyon tablosu (kâr hesabı) |
-| GET/POST | `/api/entegrasyonlar` | 9 platform + kayıtlı bağlantılar / yeni bağlantı (sır asla dönmez) |
+| GET/POST | `/api/entegrasyonlar` | 9 pazaryeri platformu + kayıtlı bağlantılar (kargo API kayıtları bu listeden ayrılır, sır asla dönmez) |
 | POST | `/api/entegrasyonlar/test` | Taslak test: `{platform, ayarlar, kimlik}` |
 | POST | `/api/entegrasyonlar/{id}/test` · `/{id}/senkron` · `/{id}/sil` | Test / `{gun:1..90}` senkron / sil |
+| GET | `/api/kargo/api` | 6 kargo firması spesifikasyonu + kayıtlı bağlantılar |
+| POST | `/api/kargo/api` · `/api/kargo/api/test` | Yeni bağlantı (201) / taslak test: `{firma, taban_adres, ayarlar, kimlik…}` |
+| POST | `/api/kargo/api/{id}/test` · `/{id}/sil` | Kayıtlı bağlantıda canlı test (2xx/4xx/5xx döner) / sil |
+| POST | `/api/kargo/senkron` | `{id?, kimlik?, tur}` — takip numaralarını sorgula, durumları güncelle |
+| GET | `/api/sms` | Aktivasyon durumu, gönderici ayarları (parola asla dönmez), gönderim geçmişi |
+| POST | `/api/sms/etkinlestir` · `/api/sms/kaldir` | İmzalı aktivasyon koduyla aç / kapat |
+| POST | `/api/sms/ayar` · `/api/sms/gonder` | Gönderici kaydı / `{alici, mesaj, baslik?}` gönder |
+| GET | `/api/guncelleme` | Public `surum.json` ile karşılaştırma (6 saat önbellek) |
 | GET | `/api/export/csv?tablo=` · `/api/sablon?tablo=` | İndirme |
 | POST | `/api/import/csv?tablo=siparisler` | Ham CSV gövdesiyle toplu yükleme |
 
@@ -136,7 +155,7 @@ eticaret-ops/
 
 ```powershell
 cd eticaret-ops
-python -m pytest -q          # 72 test
+python -m pytest -q          # 97 test
 python -m pyflakes ops       # 0 hata
 python kontrol_ara.py        # JS <-> HTML id bütünlüğü
 python kontrol_api.py        # JS yolları <-> sunucu rotaları
@@ -158,6 +177,28 @@ python kontrol_api.py        # JS yolları <-> sunucu rotaları
   "Senkronize et" aynı siparişi ikinci kez satır yapmaz (kaynak + platform sipariş
   no ile tekilleşir); okunamayan yanıt için `uyari`, 4xx/5xx için `hata`, ağ/SSL
   hatası için `ag` sonucu döner — hiçbir sekme boş kalmaz.
+- **SMS (Netgsm):** SMS sekmesi baştan kilitli görünür; satıcı
+  `araclar/sms_kodu_uret.py` ile makine kimliğine bağlı imzalı kod üretir,
+  müşteri kodu girince sekme açılır. Gönderici bilgileri `data/.sms`
+  dosyasında şifreli tutulur, arayüze/yanıta yalnız `parola_var` döner.
+  Gönderimler `sms_gonderim` tablosuna yazılır; HTTP hataları dahil her sonuç
+  geçmişte görünür. Aktivasyon `data/.sms` dosyasını silmeden `kaldir` ile geri
+  alınabilir; aynı makine için kod yeniden üretilebilir.
+- **Kargo API:** Bağlantılar ayrı tablo değil, `entegrasyonlar` tablosunda
+  `kargo_` önekli platform olarak saklanır; `kargo_api.py` içindeki spesifikasyon
+  firmaların uçlarını tanımlar (zorunlu alanlar: `tabanAdres`; opsiyonel:
+  `sorguYolu`, `takipAlani`, kimlik türü Basic/Bearer). Firma spesifik
+  dokümanlar/ uçlar müşteri tarafından girilir — panel kendi ağında çalıştığı
+  için canlı firma doğrulaması yapmaz, **Test** düğmesi verilen uçla gerçek HTTP
+  isteği atar. Durum metni Türkçe/İngilizce anahtar kelimelerle eşleştirilir ve
+  `kargo.gonderi` durumuna yazılır; `senkron` en fazla 100 takip numarası sorgular.
+- **Güncelleme:** `ops/guncelleme.py` public depodaki `surum.json` dosyasını
+  okur (varsayılan:
+  `https://raw.githubusercontent.com/RetroNyym/retroops-surum/main/surum.json`),
+  sonucu 6 saat önbellekler ve panel üstünde "Yeni sürüm var" bandı gösterir.
+  Uzak sürüm yerel sürümle aynıysa bant çıkmaz; ağ hatasında sessizce geçer
+  (panel çalışmaya devam eder). `OPS_GUNCELLEME=yok` ile kapatılabilir,
+  `OPS_GUNCELLEME_DOSYA` ile yerel dosyadan test edilebilir.
 - **Lisans:** İlk açılıştan itibaren 14 gün deneme; süresi dolan program yalnız
   `/api/meta`, `/api/lisans` ve `/kilavuz` uçlarını açık tutar, veri uçları
   `402` döner ve arayüz lisans ekranını gösterir. Anahtar `RETROOPS-…` biçiminde,
