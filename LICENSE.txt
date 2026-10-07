@@ -1,0 +1,37 @@
+RETROOPS — TİCARİ YAZILIM LİSANS SÖZLEŞMESİ
+Telif hakkı © 2026 RetroOps. Tüm hakları saklıdır.
+
+1. KAPSAM
+   Bu lisans, RetroOps E-Ticaret Operasyon Paneli yazılımının (bundan sonra
+   "Yazılım") kaynak kodu, derlenmiş biçimleri, belgeleri ve tüm bağlı
+   bileşenleri için geçerlidir.
+
+2. DEĞİL — AÇIK KAYNAK
+   Yazılım açık kaynak değildir. MIT, GPL, Apache veya benzeri hiçbir açık
+   kaynak lisansı bu depo için geçerli değildir. Yazılım "olduğu gibi"
+   (AS IS) sunulur; açık kaynak topluluk lisanslarının sağladığı çoğaltma,
+   dağıtım ve değiştirme hakları kullanıcıya verilmez.
+
+3. İZİNLİ KULLANIM
+   Yazılım, sahibinin yazılı izni olmadan:
+   - çoğaltılamaz, alt lisanslaştırılamaz, satılamaz,
+   - kaynak kodu değiştirilip yeniden dağıtılamaz,
+   - bulut/abonelik hizmeti olarak sunulamaz.
+   Teknik değerlendirme (kurulum ve test çalıştırma) için depo erişimi
+   verilen kişilere açıktır.
+
+4. GİZLİLİK
+   Depo gizli (private) tutulur; erişim, sahibi tarafından verilen kişilerle
+   sınırlıdır ve paylaşılan erişim gizlilik yükümlülüğünü de kapsar.
+
+5. SORUMLULUK SINIRI
+   Yazılımdan doğacak doğrudan veya dolaylı hiçbir zarardan sahibi sorumlu
+   tutulamaz. Yazılımın üçüncü taraf API'lere (pazaryeri, kargo, ödeme)
+   erişimi kullanıcının kendi API anahtarlarıyla yapılır; bu anahtarların
+   güvenliği kullanıcının sorumluluğundadır.
+
+6. LİSANSIN SONA ERMESİ
+   Bu lisans, koşullar ihlal edildiğinde otomatik olarak sona erer ve ihlal
+   eden tarafın erişimi derhal kaldırılır.
+
+İletişim: lisans soruları için depo sahibine başvurun.
