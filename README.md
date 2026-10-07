@@ -41,23 +41,29 @@ masaüstüne hiç dokunmadan, her sekmeyi `#sekme` derin bağlantısıyla açara
 
 **Müşteri kurulumu (Python gerekmez, tek yapması gereken API'leri bağlamak):**
 
-1. `RetroOps-v1.1.0.zip` dosyasını bir klasöre çıkarın.
-2. `RetroOps.exe` dosyasına çift tıklayın (ikon: RetroOps **R+** logosu, Python
-   ikonu değil) → **RetroOps masaüstü penceresi** açılır (tarayıcı değil;
-   adres çubuğu/sekme yok). Pencere kapatıldığında program da kapanır.
+1. `RetroOps-v1.1.0.zip` dosyasını bir klasöre çıkarın — ya da zip'i hiç
+   açmadan **zippeden doğrudan** `RetroOps.exe`'ye çift tıklayın: program
+   **tek dosyadır** (her şey gömülüdür), `python314.dll bulunamadı` gibi DLL
+   hataları oluşmaz.
+2. `RetroOps.exe` açılır (ikon: RetroOps **R+** logosu, Python ikonu değil)
+   → **RetroOps masaüstü penceresi** görünür (tarayıcı değil; adres çubuğu/
+   sekme yok). Pencere kapatıldığında program da kapanır.
 3. Hiçbir ayar gerekmez: `data/` klasörü kendiliğinden oluşur, 14 günlük deneme
    otomatik başlar, ilk ekranda **"İlk adım: pazaryeri hesabınızı bağlayın"**
    yönlendirmesi görünür.
 4. Entegrasyonlar sekmesinden API hesabını bağlayın → **Test** → **Senkronize et**.
    Bu kadar; başka hiçbir şeye dokunmak gerekmez.
 
-Pencere, Windows 10/11'de yerleşik **WebView2** ile açılır; WebView2
-yüklenmemişse program kendiliğinden tarayıcıya düşer ve yine çalışır.
+Pencere, Windows 10/11'de yerleşik **WebView2** ile açılır; pywebview/.NET
+çalışmazsa program otomatik olarak **Edge uygulama penceresinde** (adres
+çubuksuz), o da yoksa tarayıcıda açılır ve çalışmaya devam eder.
 Tarayıcı modunu isteyen `RetroOps.exe --tarayici` yazabilir.
 
-Paket içeriği: `RetroOps.exe`, `_internal/`, `retroops-logo.png`, `KILOGUZ.md`,
-`LICENSE.txt`, `Baslat.bat`.
-Veriler program klasöründeki `data/ops.db` dosyasında tutulur.
+Paket içeriği: `RetroOps.exe` (18 MB, tek dosya), `KILOGUZ.md`, `LICENSE.txt`,
+`retroops-logo.png`.
+Veriler program yanındaki `data/ops.db` dosyasında tutulur; program zip
+içinden ya da geçici bir klasörden çalıştırılıyorsa veriler otomatik olarak
+`%LOCALAPPDATA%\RetroOps\data\` altına yazılır (hiçbir koşulda kaybolmaz).
 
 **Geliştirici başlatması:**
 
@@ -69,13 +75,14 @@ python -m ops.web 8780       # veya: baslat.bat
 ```
 
 `baslat.bat` → panel / örnek veri / test menüsü.
-`.exe` derlemesi (masaüstü penceresi + R+ ikon + dosya sürümü):
+`.exe` derlemesi (tek dosya, masaüstü penceresi + R+ ikon + dosya sürümü):
 
 ```powershell
-pyinstaller --onedir --windowed --name RetroOps --icon retroops.ico `
+pyinstaller --onefile --windowed --name RetroOps --icon retroops.ico `
   --version-file surum_bilgisi.txt --add-data "KILOGUZ.md;." --add-data "retroops.ico;." baslat_exe.py
 ```
-(çıktı `dist/RetroOps/` altına düşer; `pywebview` kurulu olmalı)
+(çıktı `dist/RetroOps.exe`; `pywebview` kurulu olmalı; onedir isteyen
+`--onedir` yazabilir)
 
 ## Sekmeler
 
@@ -116,7 +123,7 @@ eticaret-ops/
     sayfa.py       Panel HTML/CSS/JS + RetroOps SVG logo
     web.py         http.server JSON API
   data/ops.db      Veritabanı (ilk çalıştırmada oluşur)
-  test_*.py        97 test
+  test_*.py        101 test
   baslat.bat, README.md, requirements.txt
 ```
 
@@ -155,7 +162,7 @@ eticaret-ops/
 
 ```powershell
 cd eticaret-ops
-python -m pytest -q          # 97 test
+python -m pytest -q          # 101 test
 python -m pyflakes ops       # 0 hata
 python kontrol_ara.py        # JS <-> HTML id bütünlüğü
 python kontrol_api.py        # JS yolları <-> sunucu rotaları
@@ -207,6 +214,18 @@ python kontrol_api.py        # JS yolları <-> sunucu rotaları
 - **Yedek:** Panel → Veri & Yedek; `.db` dosyası indirilir/yüklenir, yüklemeden
   önce `PRAGMA integrity_check` + zorunlu tablo kontrolü yapılır, eski veri
   `.eski` dosyasında saklanır ve "Önceki veriye dön" ile geri alınır.
+- **Dağıtım (tek dosya):** Ürün `dist/RetroOps.exe` (PyInstaller `--onefile`)
+  olarak dağıtılır; tüm DLL'ler (`python314.dll`, VCRUNTIME, UCRT, WebView2
+  yükleyicisi) exe'nin içindedir → "python314.dll bulunamadı / modül eksik"
+  hataları oluşmaz, zip'ten çift tıklayınca bile çalışır. Veri kökü
+  `ops.db.kok_dizin()` ile belirlenir: exe'nin yanındaki `data/` (normal
+  kullanım) ya da kalıcı olması için `%LOCALAPPDATA%\RetroOps` (zip/temp/
+  salt-okunur klasör). Beklenmeyen hatalar `data/hata.log`'a yazılır ve
+  Türkçe bilgi penceresi gösterilir. Masaüstü penceresi (pywebview/.NET)
+  açılmazsa **Edge uygulama penceresi**, o da yoksa tarayıcı devreye girer.
+- **İmzasızlık:** Program imzalı olmadığı için Windows SmartScreen/Defender
+  uyarısı verebilir; Defender program dosyalarını silerse program klasörüne
+  "izlenme izni" verilmelidir (kılavuzda anlatılıyor).
 - **Kılavuz:** `KILOGUZ.md` (son kullanıcıya yönelik) hem repoda hem pakette
   bulunur; `/kilavuz` adresinden program içinden de okunur.
 - **Bilinen sınırlama:** Bazı ağlarda pazaryeri API uçlarına TLS doğrulaması

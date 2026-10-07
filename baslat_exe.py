@@ -10,6 +10,7 @@ Sorunlar ``data/hata.log`` dosyasına yazılır.
 """
 
 import json
+import subprocess
 import sys
 import threading
 import traceback
@@ -26,6 +27,10 @@ BASLIK = "RetroOps - E-Ticaret Operasyon Paneli"
 PENCERE = (1440, 900)
 MIN_PENCERE = (1024, 640)
 ARKA_RENK = "#070b14"
+EDGE_YOLLARI = (
+    r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+    r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+)
 
 
 def _kaydet(metin: str) -> None:
@@ -95,16 +100,60 @@ def tarayicida_ac(adres: str) -> None:
     threading.Timer(1.0, lambda: webbrowser.open(adres)).start()
 
 
-if __name__ == "__main__":
+def edge_uygulama(adres: str) -> bool:
+    """Paneli Edge'in uygulama penceresinde (adres çubuksuz) açar.
+
+    pywebview/.NET çalışmıyorsa da program ``RetroOps`` penceresi gibi açılmış
+    olur; kullanıcı hiçbir fark görmez. True = pencere açıldı.
+    """
+    for yol in EDGE_YOLLARI:
+        if not Path(yol).is_file():
+            continue
+        try:
+            subprocess.Popen([
+                yol, f"--app={adres}",
+                f"--window-size={PENCERE[0]},{PENCERE[1]}",
+                "--no-first-run", "--no-default-browser-check",
+            ])
+            return True
+        except OSError:
+            continue
+    return False
+
+
+def kritik_hata(hata: str) -> None:
+    """Beklenmeyen hatayı kaydeder ve Türkçe açıklama penceresi gösterir."""
+    _kaydet(hata)
+    klasor = str(kok_dizin() / "data" / "hata.log")
+    mesaj = (
+        "RetroOps beklenmedik bir hatayla karşılaştı.\n\n"
+        f"Detaylar kaydedildi:\n{klasor}\n\n"
+        "Yapabilecekleriniz:\n"
+        "· Programı kapatıp tekrar açın\n"
+        "· Windows Defender/antivirüs programın dosyalarını silmiş olabilir;\n"
+        "  program klasörünü \"güvenilir\" olarak işaretleyin\n"
+        "· Sorun sürerse program klasörüyle birlikte hata.log dosyasını\n"
+        "  satış kanalına iletin"
+    )
+    try:
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(None, mesaj, "RetroOps", 0x10)
+    except Exception:
+        pass
+
+
+def main() -> None:
     zorla_tarayici = "--tarayici" in sys.argv
     port = None if zorla_tarayici else calisan_port()
 
     if port is not None:
-        if not pencereye_basla(f"http://127.0.0.1:{port}"):
-            webbrowser.open(f"http://127.0.0.1:{port}")
+        adres = f"http://127.0.0.1:{port}"
+        if not pencereye_basla(adres) and not edge_uygulama(adres):
+            webbrowser.open(adres)
         sys.exit(0)
 
     if zorla_tarayici:
+        son_hata = None
         for p in PORTLAR:
             try:
                 web_main(p, tarayici_ac=True)
@@ -112,9 +161,6 @@ if __name__ == "__main__":
             except OSError as e:
                 son_hata = e
                 continue
-            except Exception:
-                _kaydet(traceback.format_exc())
-                raise SystemExit(1)
         _kaydet(f"Uygun port bulunamadı ({son_hata}).")
         raise SystemExit(1)
 
@@ -125,13 +171,12 @@ if __name__ == "__main__":
         except OSError as e:
             son_hata = e
             continue
-        except Exception:
-            _kaydet(traceback.format_exc())
-            raise SystemExit(1)
         if pencereye_basla(adres):
             sys.exit(0)
-        # Pencere açılamadı → sunucu tarayıcıda çalışsın (eski davranış)
-        tarayicida_ac(adres)
+        # Masaüstü penceresi açılamadıysa Edge uygulama penceresi, o da yoksa
+        # tarayıcı; sunucu açık kaldığı sürece panel çalışmaya devam eder.
+        if not edge_uygulama(adres):
+            tarayicida_ac(adres)
         try:
             srv.serve_forever()
         except KeyboardInterrupt:
@@ -142,3 +187,13 @@ if __name__ == "__main__":
 
     _kaydet(f"Uygun port bulunamadı ({son_hata}).")
     raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:
+        kritik_hata(traceback.format_exc())
+        raise SystemExit(1)

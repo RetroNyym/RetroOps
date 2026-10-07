@@ -7,8 +7,10 @@ entegrasyonları tek ekranda. **Python bilmeniz gerekmez.**
 
 ## 1) Kurulum (2 dakika)
 
-1. Size gönderilen `RetroOps-v1.1.0.zip` dosyasını bir klasöre çıkarın.
-   (Windows 10/11 sıkıştırılmış klasörü açar: sağ tık → **Tümünü çıkar**)
+1. Size gönderilen `RetroOps-v1.1.0.zip` dosyasını bir klasöre çıkarın
+   (Windows 10/11 sıkıştırılmış klasörü açar: sağ tık → **Tümünü çıkar**).
+   Zip'i açmadan da çalıştırabilirsiniz: program **tek dosyadır**,
+   her şeyin içine gömülüdür.
 2. Klasördeki **`RetroOps.exe`** dosyasına çift tıklayın.
 3. **RetroOps masaüstü penceresi** açılır (tarayıcı değil; adres çubuğu ve
    sekme yoktur). Panelle yaptığınız her şey bu pencerede olur.
@@ -17,13 +19,18 @@ entegrasyonları tek ekranda. **Python bilmeniz gerekmez.**
 > Bu, yeni ve imzalanmamış programlarda normal bir uyarıdır.
 
 Pencereyi kapatmanız programı kapatır. Yeniden açmak için `RetroOps.exe`'ye
-tekrar çift tıklamanız yeterlidir.
+tekrar çift tıklamanız yeterlidir. Pencere açılamazsa program kendiliğinden
+**Edge uygulama penceresinde** (adres çubuksuz, aynı program gibi), o da
+yoksa tarayıcıda açılır; işlev farkı olmaz.
 
 Tarayıcıdan da açmak isterseniz (isterseniz): `http://127.0.0.1:8780`
 — ya da programı `RetroOps.exe --tarayici` ile başlatın.
 
-**Verileriniz nerede?** Program klasöründeki `data\ops.db` dosyasında.
-Bu dosyayı kopyalamanız tüm verilerinizi yedeklemek demektir.
+**Verileriniz nerede?** Programı normal bir klasöre çıkardıysanız
+program yanındaki `data\ops.db` dosyasında; zip içinden ya da geçici bir
+klasörden çalıştırdıysanız `C:\Users\<ad>\AppData\Local\RetroOps\data\ops.db`
+dosyasında. Her iki durumda da bu dosyayı kopyalamanız tüm verilerinizi
+yedeklemek demektir.
 
 ---
 
@@ -152,12 +159,22 @@ Haftada bir yedek almanızı öneririz.
 - **Pencere açılmıyor:** program kapalı olabilir. `RetroOps.exe`'ye tekrar
   çift tıklayın. Hâlâ olmuyorsa tarayıcıda `http://127.0.0.1:8780` yazın
   (program yine arka planda çalışıyordur).
+- **"DLL bulunamadı / modül eksik" hatası:** program tek dosya olduğu için
+  bu hata normalde çıkmaz. Görürseniz dosya yarım inmiş veya antivirüs bir
+  parçasını silmiş demektir: zip'i **Tümünü çıkar** ile yeniden çıkarıp
+  `RetroOps.exe`'yi çalıştırın; Defender uyarısında *Yine de çalıştır*
+  deyin ve program klasörüne izin verin.
 - **"Bağlantı reddedildi":** port başka bir program tarafından kullanılıyor.
   Bilgisayarı yeniden başlatıp tekrar deneyin.
 - **Panel boş görünüyor:** entegrasyon bağlayın veya **CSV** sekmesinden
   siparişlerinizi toplu yükleyin (şablonu oradan indirirsiniz).
-- **Pencere yerine tarayıcı açıldı:** bilgisayarınızda WebView2 yoktur;
-  program bu durumda otomatik olarak tarayıcıya geçer, işlev farkı yoktur.
+- **Pencere yerine Edge penceresi veya tarayıcı açıldı:** bilgisayarınızda
+  masaüstü penceresi bileşeni (WebView2/.NET) çalışmıyordur; program bunu
+  algılayıp kendiliğinden Edge uygulama penceresine, o da yoksa tarayıcıya
+  geçer. İşlev farkı yoktur.
+- **Yeni sürüm bandı çıktı:** panelin üstündeki "Yeni sürüm var" bandındaki
+  bağlantıdan (ya da satış kanalından) güncel dosyaları alıp exe'yi
+  değiştirmeniz yeterlidir; verileriniz aynen kalır.
 - **KDV oranı yanlış görünüyorsa:** siparişin KDV alanını düzenleyin
   (CSV ile yüklerken `kdv_orani` sütunu tanımlıdır).
 
@@ -167,8 +184,11 @@ Haftada bir yedek almanızı öneririz.
 
 - Tüm veriler (sipariş, müşteri, şikâyet, anahtarlar) **yalnız bu
   bilgisayarda** tutulur; hiçbir veri satıcısı olmayan bir sunucuya gönderilmez.
-- Program yalnız `127.0.0.1` (bu bilgisayar) üzerinde dinler; internete
-  açılmaz, dışarıdan erişilemez.
+- Programın kendi paneli internete açılmaz: yalnız `127.0.0.1` (bu
+  bilgisayar) üzerinde dinler, dışarıdan erişilemez.
+- Dışarıya giden tek trafik sizin açtığınız bağlantılardır: bağlı olduğunuz
+  pazaryeri API'leri, kargo firması sorguları, gönderdiğiniz SMS ve
+  (6 saatte bir) güncelleme kontrolü. Başka hiçbir veri paylaşılmaz.
 - Müşteri bilgilerini işlerken 6698 sayılı KVKK kapsamında yalnızca kendi
   verinizin sorumlususunuz; yedeklerinizi güvende tutun.
 

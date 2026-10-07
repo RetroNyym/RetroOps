@@ -5,18 +5,66 @@ from __future__ import annotations
 import os
 import sqlite3
 import sys
+import tempfile
 from pathlib import Path
+
+
+def _exe_yolu() -> Path:
+    """Derlenmiş programda ``.exe``nin gerçek (kalıcı) yolu."""
+    for aday in (sys.executable, sys.argv[0] if sys.argv else ""):
+        if aday:
+            try:
+                return Path(aday).resolve()
+            except OSError:
+                continue
+    return Path.cwd()
+
+
+def _kararli_klasor(klasor: Path) -> bool:
+    """Bu klasöre veri yazmak güvenli mi? (geçici/zip klasörü değil, yazılabilir)"""
+    try:
+        if klasor == Path(tempfile.gettempdir()) or klasor.is_relative_to(
+                Path(tempfile.gettempdir())):
+            return False
+        deneme = klasor / ".yazma-denemesi"
+        deneme.write_text("ok", encoding="utf-8")
+        deneme.unlink()
+        return True
+    except OSError:
+        return False
+
+
+_KOK_ONBELLEK: Path | None = None
 
 
 def kok_dizin() -> Path:
     """Veri klasörünün kökü.
 
-    PyInstaller ile derlenmiş ``.exe`` çalışırken ``exe`` yanındaki ``data/``
-    kullanılır; kaynak koddaysa proje kökü kullanılır.
+    - Kaynak kodda proje kökü kullanılır.
+    - Derlenmiş ``.exe``de program yanındaki ``data/`` klasörü kullanılır
+      (onefile tek dosya olsa bile ``exe``nin yanındaki klasör; geçici
+      açılma klasörü asla veri için kullanılmaz).
+    - Program zip içinden ya da salt-okunur bir klasörden çalıştırılıyorsa
+      veri ``%LOCALAPPDATA%\\RetroOps`` altına yazılır; kullanıcı verisi
+      hiçbir koşulda kaybolmaz.
     """
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable).resolve().parent
-    return Path(__file__).resolve().parent.parent
+    global _KOK_ONBELLEK
+    if _KOK_ONBELLEK is not None:
+        return _KOK_ONBELLEK
+    if not getattr(sys, "frozen", False):
+        _KOK_ONBELLEK = Path(__file__).resolve().parent.parent
+        return _KOK_ONBELLEK
+    exe_klasor = _exe_yolu().parent
+    if _kararli_klasor(exe_klasor):
+        _KOK_ONBELLEK = exe_klasor
+    else:
+        yerel = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "RetroOps"
+        try:
+            yerel.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
+        _KOK_ONBELLEK = yerel
+    return _KOK_ONBELLEK
 
 
 DB_YOL = kok_dizin() / "data" / "ops.db"
