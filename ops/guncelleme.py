@@ -1,6 +1,6 @@
 """Uzaktan güncelleme kontrolü: public GitHub sürüm dosyası.
 
-``https://raw.githubusercontent.com/RetroNyym/retroops-surum/main/surum.json``
+``https://raw.githubusercontent.com/RetroNyym/RetroOps/main/surum.json``
 adresindeki dosya ile yerel sürüm karşılaştırılır:
 
     {"surum": "1.1.0", "indirme": "", "not": "..."}
@@ -23,7 +23,7 @@ from pathlib import Path
 from . import __surum__
 
 SURUM_URL = (
-    "https://raw.githubusercontent.com/RetroNyym/retroops-surum/main/"
+    "https://raw.githubusercontent.com/RetroNyym/RetroOps/main/"
     "surum.json"
 )
 ONBELLEK_SURE = 6 * 3600  # saniye

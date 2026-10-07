@@ -158,6 +158,34 @@ eticaret-ops/
 | GET | `/api/export/csv?tablo=` · `/api/sablon?tablo=` | İndirme |
 | POST | `/api/import/csv?tablo=siparisler` | Ham CSV gövdesiyle toplu yükleme |
 
+## Dağıtım (public depo · Releases)
+
+Kaynak kod **bu depoda (gizli) kalır**; müşteriler yalnızca derlenmiş ürünü
+indirir:
+
+| Ne | Nerede | İçerik |
+|---|---|---|
+| Kaynak kod + testler | `RetroNyym/Retronym` (**private**) | Her şey |
+| Public tanıtım deposu | [`RetroNyym/RetroOps`](https://github.com/RetroNyym/RetroOps) | README, LICENSE, KILOGUZ, ekran görüntüleri, `surum.json` — **kod yok** |
+| İndirilebilir dosyalar | `RetroOps` deposunun **Releases** bölümü | `RetroOps-vX.Y.Z.zip` + `RetroOps.exe` |
+| Güncelleme kontrolü | `raw.githubusercontent.com/…/RetroOps/main/surum.json` | Panel üstündeki "Yeni sürüm" bandı |
+
+Sürüm yayınlama akışı:
+
+```powershell
+# 1) kod değişikliği bittikten sonra exe'yi derle (aşağıdaki komut)
+# 2) testler + kontroller
+python -m pytest -q ; python -m pyflakes ops
+# 3) public depodaki surum.json'u güncelle (surum + indirme URL'i)
+# 4) release oluştur ve dosyaları yükle
+gh release create v1.2.0 RetroOps-v1.2.0.zip RetroOps.exe `
+  --repo RetroNyym/RetroOps --title "RetroOps 1.2.0" --notes "..."
+```
+
+> Eski `RetroNyym/retroops-surum` deposundaki `surum.json` da her yayında
+> aynı `indirme` adresine güncellenir (bugün sahip olunan eski yapımların
+> bildirim alması için).
+
 ## Test
 
 ```powershell
@@ -201,7 +229,7 @@ python kontrol_api.py        # JS yolları <-> sunucu rotaları
   `kargo.gonderi` durumuna yazılır; `senkron` en fazla 100 takip numarası sorgular.
 - **Güncelleme:** `ops/guncelleme.py` public depodaki `surum.json` dosyasını
   okur (varsayılan:
-  `https://raw.githubusercontent.com/RetroNyym/retroops-surum/main/surum.json`),
+  `https://raw.githubusercontent.com/RetroNyym/RetroOps/main/surum.json`),
   sonucu 6 saat önbellekler ve panel üstünde "Yeni sürüm var" bandı gösterir.
   Uzak sürüm yerel sürümle aynıysa bant çıkmaz; ağ hatasında sessizce geçer
   (panel çalışmaya devam eder). `OPS_GUNCELLEME=yok` ile kapatılabilir,
