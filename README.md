@@ -1,5 +1,9 @@
 # RetroOps · E-Ticaret Operasyon Paneli
 
+> **EN:** Free Windows desktop app for Turkish e-commerce operations — returns
+> tracking, shipping-issue board, profit & break-even calculator, complaint
+> monitor and marketplace integrations. 14-day trial, license key afterwards.
+
 **İade takibi, kargo problem panosu, kâr/kırılma noktası hesabı, şikâyet
 izleyici ve pazaryeri entegrasyonları** — hepsi tek, sade bir panelde.
 Windows için hazırlanmış masaüstü uygulamasıdır; **Python, kurulum sihirbazı
