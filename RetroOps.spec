@@ -5,7 +5,7 @@ a = Analysis(
     ['baslat_exe.py'],
     pathex=[],
     binaries=[],
-    datas=[('KILOGUZ.md', '.'), ('retroops.ico', '.')],
+    datas=[('KILAVUZ.md', '.'), ('retroops.ico', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

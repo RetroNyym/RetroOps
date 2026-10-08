@@ -59,7 +59,7 @@ Pencere, Windows 10/11'de yerleşik **WebView2** ile açılır; pywebview/.NET
 çubuksuz), o da yoksa tarayıcıda açılır ve çalışmaya devam eder.
 Tarayıcı modunu isteyen `RetroOps.exe --tarayici` yazabilir.
 
-Paket içeriği: `RetroOps.exe` (18 MB, tek dosya), `KILOGUZ.md`, `LICENSE.txt`,
+Paket içeriği: `RetroOps.exe` (18 MB, tek dosya), `KILAVUZ.md`, `LICENSE.txt`,
 `retroops-logo.png`.
 Veriler program yanındaki `data/ops.db` dosyasında tutulur; program zip
 içinden ya da geçici bir klasörden çalıştırılıyorsa veriler otomatik olarak
@@ -79,7 +79,7 @@ python -m ops.web 8780       # veya: baslat.bat
 
 ```powershell
 pyinstaller --onefile --windowed --name RetroOps --icon retroops.ico `
-  --version-file surum_bilgisi.txt --add-data "KILOGUZ.md;." --add-data "retroops.ico;." baslat_exe.py
+  --version-file surum_bilgisi.txt --add-data "KILAVUZ.md;." --add-data "retroops.ico;." baslat_exe.py
 ```
 (çıktı `dist/RetroOps.exe`; `pywebview` kurulu olmalı; onedir isteyen
 `--onedir` yazabilir)
@@ -133,7 +133,7 @@ eticaret-ops/
 |---|---|---|
 | GET | `/api/meta` | Durum/kategori listeleri (arayüz bununla dolar) + lisans durumu |
 | GET/POST | `/api/lisans` | Deneme/lisans durumu / anahtar etkinleştirme (makineye bağlı) |
-| GET | `/kilavuz` | Kullanım kılavuzu (KILOGUZ.md'den üretilir) |
+| GET | `/kilavuz` | Kullanım kılavuzu (KILAVUZ.md'den üretilir) |
 | GET | `/api/yedek/indir` · POST `/api/yedek/yukle` · POST `/api/yedek/geri_al` | Veritabanı yedeği indir / yükle (doğrulanır) / geri al |
 | GET | `/api/ozet` | Panel kartları + istatistikler |
 | GET/POST | `/api/siparisler` | Liste (`?limit=200` ile son N) / ekle (kâr hesabıyla birlikte) |
@@ -166,7 +166,7 @@ indirir:
 | Ne | Nerede | İçerik |
 |---|---|---|
 | Kaynak kod + testler | `RetroNyym/Retronym` (**private**) | Her şey |
-| Public tanıtım deposu | [`RetroNyym/RetroOps`](https://github.com/RetroNyym/RetroOps) | README, LICENSE, KILOGUZ, ekran görüntüleri, `surum.json` — **kod yok** |
+| Public tanıtım deposu | [`RetroNyym/RetroOps`](https://github.com/RetroNyym/RetroOps) | README, LICENSE, KILAVUZ, ekran görüntüleri, `surum.json` — **kod yok** |
 | İndirilebilir dosyalar | `RetroOps` deposunun **Releases** bölümü | `RetroOps-vX.Y.Z.zip` + `RetroOps.exe` |
 | Güncelleme kontrolü | `raw.githubusercontent.com/…/RetroOps/main/surum.json` | Panel üstündeki "Yeni sürüm" bandı |
 
@@ -254,7 +254,7 @@ python kontrol_api.py        # JS yolları <-> sunucu rotaları
 - **İmzasızlık:** Program imzalı olmadığı için Windows SmartScreen/Defender
   uyarısı verebilir; Defender program dosyalarını silerse program klasörüne
   "izlenme izni" verilmelidir (kılavuzda anlatılıyor).
-- **Kılavuz:** `KILOGUZ.md` (son kullanıcıya yönelik) hem repoda hem pakette
+- **Kılavuz:** `KILAVUZ.md` (son kullanıcıya yönelik) hem repoda hem pakette
   bulunur; `/kilavuz` adresinden program içinden de okunur.
 - **Bilinen sınırlama:** Bazı ağlarda pazaryeri API uçlarına TLS doğrulaması
   engellendiğinden canlı uç testi yapılamıyor (bu ortamda Trendyol/Hepsiburada/N11

@@ -669,10 +669,10 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def KILAVUZ_HTML() -> str:
-    """``KILOGUZ.md`` dosyasını koyu temalı bir HTML sayfasına çevirir."""
+    """``KILAVUZ.md`` dosyasını koyu temalı bir HTML sayfasına çevirir."""
     adaylar = [
-        kok_dizin() / "KILOGUZ.md",
-        Path(__file__).resolve().parent.parent / "KILOGUZ.md",
+        kok_dizin() / "KILAVUZ.md",
+        Path(__file__).resolve().parent.parent / "KILAVUZ.md",
     ]
     metin = ""
     for aday in adaylar:
@@ -682,7 +682,7 @@ def KILAVUZ_HTML() -> str:
         except OSError:
             continue
     if not metin:
-        metin = ("# Kılavuz bulunamadı\n\nKılavuz dosyası (KILOGUZ.md) programla "
+        metin = ("# Kılavuz bulunamadı\n\nKılavuz dosyası (KILAVUZ.md) programla "
                  "aynı klasörde olmalı.")
     parcalar = ["<pre style='white-space:pre-wrap;font-family:inherit'>"]
     on_blok = False
