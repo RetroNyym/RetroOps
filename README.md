@@ -16,7 +16,7 @@ veya teknik bilgi gerekmez.**
 
 Paket tek dosyadır: `RetroOps.exe` her şeyin içine gömülmüştür; ek DLL,
 kütüphane veya çerçeveler gerekmez. Paket içinde ayrıca kullanım kılavuzu
-(`KILOGUZ.md`) bulunur.
+(`KILAVUZ.md`) bulunur.
 
 ## Kurulum (2 dakika)
 
@@ -81,7 +81,7 @@ Başka hiçbir şey gerekmez.
 - Program yalnız bu bilgisayar üzerinde çalışır; verileriniz
   `data\ops.db` dosyasında **sadece sizin makinenizde** tutulur.
 - Ayrıntılar için [`LICENSE.txt`](LICENSE.txt) ve
-  [`KILOGUZ.md`](KILOGUZ.md) dosyalarına bakın.
+  [`KILAVUZ.md`](KILAVUZ.md) dosyalarına bakın.
 
 ## Destek
 
