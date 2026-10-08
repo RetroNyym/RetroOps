@@ -1,5 +1,10 @@
 # RetroOps · E-Ticaret Operasyon Paneli
 
+> **EN:** RetroOps — Turkish e-commerce operations dashboard (**source code**):
+> returns tracking, shipping-issue board, profit & break-even calculator,
+> complaint monitor and marketplace integrations. Python stdlib + SQLite,
+> fully offline, no external dependencies.
+
 Son 5 yılın Google Trends araştırmasında **en net problem e-ticarette**: Türkiye'de
 e-ticaret 2025'te 365.395 şikâyetle en çok şikâyet edilen sektör (%63 iptal-iade-değişim,
 %56 fiyat-fatura-ödeme, %34 teslim edilmeyen ürün), kargo gecikmesi ve artan pazaryeri
