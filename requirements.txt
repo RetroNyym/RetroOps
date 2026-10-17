@@ -1,0 +1,8 @@
+# Zorunlu harici bağımlılık yok — uygulama saf standart kütüphane ile çalışır
+# (sqlite3, http.server, urllib, csv, json).
+#
+# Entegrasyon anahtarlarını şifrelemek için (opsiyonel, yoksa stdlib'e düşer):
+# cryptography>=42
+#
+# Geliştirme / test için:
+pytest>=8.0

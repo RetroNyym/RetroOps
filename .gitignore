@@ -1,0 +1,30 @@
+# Veritabanı, şifreleme anahtarı ve gizli veriler asla commit edilmez
+data/
+*.db
+*.sqlite
+*.sqlite3
+.anahtar
+.lisans
+
+# Derleme çıktıları
+build/
+dist/
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Test / araç artıkları
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editör / sistem
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
